@@ -14,14 +14,14 @@ local AudioConfig = {}
 -- VOLUME DEFAULTS
 --------------------------------------------------------------------------------
 
-AudioConfig.DefaultSettings: Types.AudioSettings = {
+AudioConfig.DefaultSettings = {
 	masterVolume = 0.8,
 	ambientVolume = 0.6,
 	sfxVolume = 0.8,
 	musicVolume = 0.4,
 	uiVolume = 0.7,
 	muteAll = false,
-}
+} :: Types.AudioSettings
 
 --------------------------------------------------------------------------------
 -- AMBIENT ZONES

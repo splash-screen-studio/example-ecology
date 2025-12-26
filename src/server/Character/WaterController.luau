@@ -88,12 +88,12 @@ local function detectWaterAtPosition(x: number, y: number, z: number): (boolean,
 		return terrain:ReadVoxels(region, 4)
 	end)
 
-	if not success or not materials then
+	if not success or not materials or type(materials) ~= "table" then
 		return false, nil, nil
 	end
 
 	local hasWater = false
-	for _, xMats in materials do
+	for _, xMats in materials :: { { { Enum.Material } } } do
 		for _, yMats in xMats do
 			for _, material in yMats do
 				if material == Enum.Material.Water then
