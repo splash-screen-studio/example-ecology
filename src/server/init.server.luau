@@ -2,6 +2,7 @@ local PlaceConfig = require(game:GetService("ReplicatedStorage").Shared.PlaceCon
 local WorldBuilder = require(script.WorldBuilder)
 local WaterController = require(script.Character.WaterController)
 local PlayerDataService = require(script.Data.PlayerDataService)
+local NetworkHandlers = require(script.Network.Handlers)
 
 -- Remove default Baseplate (we use generated terrain)
 local baseplate = workspace:FindFirstChild("Baseplate")
@@ -10,8 +11,9 @@ if baseplate then baseplate:Destroy() end
 -- Apply place-specific lighting
 PlaceConfig.applyLighting()
 
--- Initialize player data persistence
+-- Initialize core systems
 PlayerDataService:init()
+NetworkHandlers:init()
 
 print("Server started:", PlaceConfig.getCurrent().name)
 
