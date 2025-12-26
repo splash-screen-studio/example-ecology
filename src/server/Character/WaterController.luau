@@ -92,16 +92,25 @@ local function detectWaterAtPosition(x: number, y: number, z: number): (boolean,
 		return false, nil, nil
 	end
 
+	-- Safely check for water in the 3D voxel array
 	local hasWater = false
-	for _, xMats in materials :: { { { Enum.Material } } } do
-		for _, yMats in xMats do
-			for _, material in yMats do
-				if material == Enum.Material.Water then
-					hasWater = true
-					break
+	local checkSuccess = pcall(function()
+		for _, xMats in materials do
+			if type(xMats) ~= "table" then continue end
+			for _, yMats in xMats do
+				if type(yMats) ~= "table" then continue end
+				for _, material in yMats do
+					if material == Enum.Material.Water then
+						hasWater = true
+						return
+					end
 				end
 			end
 		end
+	end)
+
+	if not checkSuccess then
+		return false, nil, nil
 	end
 
 	if not hasWater then
