@@ -19,6 +19,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Dependencies (loaded after init to avoid circular requires)
 local Network: any
 local PlayerDataService: any
+local EcologyService: any
 local RateLimiter: any
 local Validators: any
 
@@ -202,22 +203,44 @@ local function handleEcoAction(player: Player, data: any)
 		return { success = false, error = "Invalid request" }
 	end
 
-	-- TODO: Validate player can perform action at location
-	-- TODO: Process ecological impact
-	-- TODO: Update world state
+	-- Find region at player position
+	local character = player.Character
+	if not character then
+		return { success = false, error = "No character" }
+	end
 
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then
+		return { success = false, error = "No character" }
+	end
+
+	local position = cleanData.position or rootPart.Position
+	local region = EcologyService:getRegionAtPosition(position)
+
+	if not region then
+		return { success = false, error = "Not in an ecological region" }
+	end
+
+	-- Apply action through EcologyService
+	local result = EcologyService:applyPlayerAction(
+		player,
+		region.id,
+		cleanData.actionType,
+		cleanData.targetId
+	)
+
+	-- Track in player data
 	local placeId = tostring(game.PlaceId)
-	local positive = cleanData.actionType ~= "remove" -- Most actions are positive
-
+	local positive = cleanData.actionType ~= "remove"
 	PlayerDataService:recordEcoAction(player, placeId, positive, cleanData.targetId)
 
-	print(string.format("[Handlers] %s performed eco action: %s on %s", player.Name, cleanData.actionType, cleanData.targetId or "area"))
+	print(string.format("[Handlers] %s performed eco action: %s in %s", player.Name, cleanData.actionType, region.name))
 
 	return {
-		success = true,
+		success = result.success,
 		data = {
 			impactPositive = positive,
-			message = positive and "The ecosystem responds positively!" or "This may have consequences...",
+			message = result.message,
 		},
 	}
 end
@@ -280,6 +303,7 @@ function Handlers:init()
 	-- Load dependencies
 	Network = require(ReplicatedStorage.Shared.Network)
 	PlayerDataService = require(script.Parent.Parent.Data.PlayerDataService)
+	EcologyService = require(script.Parent.Parent.Ecology.EcologyService)
 	RateLimiter = require(script.Parent.RateLimiter)
 	Validators = require(script.Parent.Validators)
 

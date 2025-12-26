@@ -3,6 +3,7 @@ local WorldBuilder = require(script.WorldBuilder)
 local WaterController = require(script.Character.WaterController)
 local PlayerDataService = require(script.Data.PlayerDataService)
 local NetworkHandlers = require(script.Network.Handlers)
+local EcologyService = require(script.Ecology.EcologyService)
 
 -- Remove default Baseplate (we use generated terrain)
 local baseplate = workspace:FindFirstChild("Baseplate")
@@ -14,6 +15,7 @@ PlaceConfig.applyLighting()
 -- Initialize core systems
 PlayerDataService:init()
 NetworkHandlers:init()
+EcologyService:init()
 
 print("Server started:", PlaceConfig.getCurrent().name)
 
@@ -29,4 +31,5 @@ WaterController:init()
 _G.WorldBuilder = WorldBuilder
 _G.WaterController = WaterController
 _G.PlayerDataService = PlayerDataService
-print("WorldBuilder, WaterController, PlayerDataService available via _G")
+_G.EcologyService = EcologyService
+print("WorldBuilder, WaterController, PlayerDataService, EcologyService available via _G")
