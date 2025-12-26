@@ -22,8 +22,8 @@ local Configs = {
 			GeographicLatitude = 20,
 		},
 		terrain = {
-			waterLevel = 8,      -- Higher water level
-			baseHeight = 15,     -- Raise terrain so ~30% is underwater
+			waterLevel = 12,     -- Water surface level
+			baseHeight = 5,      -- Lower base = more water coverage
 			seed = 42,
 			waterCoverage = 0.30, -- Target 30% water
 		},
