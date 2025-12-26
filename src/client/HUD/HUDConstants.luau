@@ -59,13 +59,20 @@ HUDConstants.Sizes = {
 
 HUDConstants.Colors = {
 	-- Backgrounds
-	ContainerBackground = Color3.fromRGB(0, 0, 0),
-	ContainerBackgroundTransparency = 0.5,
+	Background = Color3.fromRGB(0, 0, 0),
+	BackgroundDark = Color3.fromRGB(40, 40, 40),
+	BackgroundDarker = Color3.fromRGB(30, 30, 30),
 
+	-- Aliases for InventoryHotbar
+	ContainerBackground = Color3.fromRGB(0, 0, 0),
 	SlotDefault = Color3.fromRGB(40, 40, 40),
 	SlotSelected = Color3.fromRGB(80, 120, 180),
 	SlotHover = Color3.fromRGB(60, 60, 60),
 	SlotEmpty = Color3.fromRGB(30, 30, 30),
+
+	-- Interactive
+	Primary = Color3.fromRGB(80, 120, 180),
+	Hover = Color3.fromRGB(60, 60, 60),
 
 	-- Text
 	TextPrimary = Color3.fromRGB(255, 255, 255),
@@ -80,6 +87,16 @@ HUDConstants.Colors = {
 	-- Warning colors
 	WarningLow = Color3.fromRGB(255, 200, 50),
 	WarningCritical = Color3.fromRGB(255, 80, 80),
+}
+
+--------------------------------------------------------------------------------
+-- TRANSPARENCY
+--------------------------------------------------------------------------------
+
+HUDConstants.Transparency = {
+	Background = 0.5,
+	Solid = 0,
+	Text = 0,
 }
 
 --------------------------------------------------------------------------------

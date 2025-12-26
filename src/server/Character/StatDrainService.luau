@@ -26,13 +26,13 @@ local Network
 -- Configuration: Two stats to find common patterns
 local DRAIN_CONFIG = {
 	hunger = {
-		rate = 1, -- Amount to drain
-		interval = 15, -- Seconds between drains
+		rate = 2, -- Amount to drain per tick
+		interval = 5, -- Seconds between drains (faster for testing)
 		deathMessage = "You starved!",
 	},
 	thirst = {
-		rate = 1.5, -- Thirst drains faster
-		interval = 15,
+		rate = 3, -- Thirst drains faster than hunger
+		interval = 5, -- Seconds between drains
 		deathMessage = "You died of thirst!",
 	},
 }
