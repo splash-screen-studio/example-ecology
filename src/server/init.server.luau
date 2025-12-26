@@ -2,6 +2,10 @@ local PlaceConfig = require(game:GetService("ReplicatedStorage").Shared.PlaceCon
 local WorldBuilder = require(script.WorldBuilder)
 local WaterController = require(script.Character.WaterController)
 
+-- Remove default Baseplate (we use generated terrain)
+local baseplate = workspace:FindFirstChild("Baseplate")
+if baseplate then baseplate:Destroy() end
+
 -- Apply place-specific lighting
 PlaceConfig.applyLighting()
 
