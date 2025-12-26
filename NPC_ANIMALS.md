@@ -1,6 +1,6 @@
 # World-Class Animated NPCs & Animals
 
-Research on creating high-quality animated wildlife for Example Ecology (2025).
+Research on creating high-quality animated wildlife for Verdant Basin (2025).
 
 ## Overview
 
@@ -223,7 +223,7 @@ For hundreds of animals (ecosystem simulation):
 
 ---
 
-## Recommended Approach for Example Ecology
+## Recommended Approach for Verdant Basin
 
 ### Verdant Basin (dense, interconnected)
 - **Fish**: Simple FSM, schooling/flocking

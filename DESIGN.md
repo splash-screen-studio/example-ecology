@@ -1,4 +1,4 @@
-# Example Ecology
+# Verdant Basin
 
 An ecology simulation with two contrasting biomes.
 

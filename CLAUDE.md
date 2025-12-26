@@ -1,19 +1,30 @@
-# Example Ecology — Development Guide
+# Verdant Basin — Development Guide
 
-An ecology simulation with two contrasting biomes: **Verdant Basin** (lush, interconnected) and **Driftplain** (harsh, migratory).
+An ecology simulation game. You are an Ecologist discovering what's wrong with interconnected ecosystems and choosing how to restore them.
+
+**Opening Place**: Verdant Basin (lush wetland, too much abundance)
+**Second Place**: Driftplain (arid plains, too little water)
 
 ## Quick Reference
 
+### Game Design (Start Here)
 | Document | Purpose |
 |----------|---------|
-| [DESIGN.md](./DESIGN.md) | Game concept, place descriptions, visual style |
+| [GAME_DESIGN.md](./GAME_DESIGN.md) | Core concept, gameplay loop, detailed place content |
+| [FUTURE_PLACES.md](./FUTURE_PLACES.md) | 7 future places outline, world structure |
+| [NARRATIVE_SCRIPTS.md](./NARRATIVE_SCRIPTS.md) | NPC dialogue, quest flow, multiplayer, teleporting |
+| [STORY_DESIGN.md](./STORY_DESIGN.md) | Environmental storytelling, show-don't-tell |
+
+### Technical Design
+| Document | Purpose |
+|----------|---------|
+| [DESIGN.md](./DESIGN.md) | Visual style, art direction |
 | [WORLDBUILDING.md](./WORLDBUILDING.md) | Terrain, models, Blender workflow, MCP usage |
 | [TERRAIN_WATER.md](./TERRAIN_WATER.md) | Water systems, swimming, terrain generation |
 | [PLACEMENT.md](./PLACEMENT.md) | Object/NPC placement, elevation service |
 | [NPC_ANIMALS.md](./NPC_ANIMALS.md) | Animal animation, rigging, AI behavior |
 | [UI_HUD.md](./UI_HUD.md) | Mobile-first UI, HUD, status bars, minimap |
 | [GAMEPLAY_MECHANICS.md](./GAMEPLAY_MECHANICS.md) | Items, combat, survival, teleporting |
-| [STORY_DESIGN.md](./STORY_DESIGN.md) | Narrative, environmental storytelling, no-text tutorials |
 | [ENGINEERING.md](./ENGINEERING.md) | Git workflow, testing, CI/CD, code patterns |
 
 ---
@@ -21,7 +32,7 @@ An ecology simulation with two contrasting biomes: **Verdant Basin** (lush, inte
 ## Project Structure
 
 ```
-example-ecology/
+verdant-basin/
 ├── src/
 │   ├── client/           # Client-side scripts
 │   ├── server/           # Server-side scripts

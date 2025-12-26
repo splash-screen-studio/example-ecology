@@ -1,6 +1,6 @@
 # Terrain, Water & Character Handling
 
-Research on robust terrain/water systems for Example Ecology (2025).
+Research on robust terrain/water systems for Verdant Basin (2025).
 
 ## The Hard Problems
 
@@ -373,7 +373,7 @@ end
 
 ---
 
-## Recommended Architecture for Example Ecology
+## Recommended Architecture for Verdant Basin
 
 ### Water Regions Config
 

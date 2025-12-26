@@ -1,6 +1,6 @@
 # World Building Approaches
 
-Research on building static environments for Example Ecology (2025).
+Research on building static environments for Verdant Basin (2025).
 
 ## Approaches Compared
 
@@ -150,7 +150,7 @@ Research on building static environments for Example Ecology (2025).
 
 ---
 
-## Recommended Approach for Example Ecology
+## Recommended Approach for Verdant Basin
 
 Given the project goals (static world, two contrasting biomes, artistic style):
 

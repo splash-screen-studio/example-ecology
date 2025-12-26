@@ -1,6 +1,6 @@
 # Gameplay Mechanics
 
-Research on core gameplay systems for Example Ecology (2025).
+Research on core gameplay systems for Verdant Basin (2025).
 
 ## Mechanics Overview
 

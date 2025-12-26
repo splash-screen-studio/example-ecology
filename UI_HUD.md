@@ -1,6 +1,6 @@
 # Mobile-First UI & HUD Design
 
-Research on touch-friendly, responsive UI for Example Ecology (2025).
+Research on touch-friendly, responsive UI for Verdant Basin (2025).
 
 ## Design Principles
 
