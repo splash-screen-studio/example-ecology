@@ -37,6 +37,11 @@ type ActiveConversation = {
 	startedAt: number,
 }
 
+-- Config
+local CONFIG = {
+	CONVERSATION_TIMEOUT = 30, -- Auto-end conversation after 30 seconds of no response
+}
+
 -- State
 local initialized = false
 local activeConversations: { [Player]: ActiveConversation } = {}
@@ -268,6 +273,16 @@ function DialogueService:startConversation(player: Player, npcId: string): boole
 			end
 		end)
 	end
+
+	-- Timeout: auto-end conversation if no response (prevents stuck state)
+	local conversationStartTime = activeConversations[player].startedAt
+	task.delay(CONFIG.CONVERSATION_TIMEOUT, function()
+		local conv = activeConversations[player]
+		if conv and conv.startedAt == conversationStartTime then
+			print(string.format("[DialogueService] Conversation with %s timed out for %s", tree.npcName, player.Name))
+			self:endConversation(player)
+		end
+	end)
 
 	return true
 end
