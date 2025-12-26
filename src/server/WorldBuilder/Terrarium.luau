@@ -68,13 +68,20 @@ local function createBox(config: TerrariumConfig): Folder
 	local center = config.center
 	local size = config.size
 	local thickness = config.wallThickness or DEFAULT_CONFIG.WALL_THICKNESS
-	local halfX, halfY, halfZ = size.X / 2, size.Y / 2, size.Z / 2
+	local halfX, halfZ = size.X / 2, size.Z / 2
+
+	-- Walls extend from below floor level to ceiling
+	-- Floor is at Y = -80, ceiling is at Y = size.Y
+	local floorY = -80
+	local ceilingY = size.Y
+	local wallHeight = ceilingY - floorY -- Total wall height
+	local wallCenterY = (floorY + ceilingY) / 2 -- Center of wall
 
 	-- North wall (+Z)
 	local northWall = createGlassPart(
 		"NorthWall",
-		Vector3.new(size.X + thickness * 2, size.Y, thickness),
-		CFrame.new(center.X, center.Y + halfY, center.Z + halfZ + thickness / 2),
+		Vector3.new(size.X + thickness * 2, wallHeight, thickness),
+		CFrame.new(center.X, center.Y + wallCenterY, center.Z + halfZ + thickness / 2),
 		config
 	)
 	northWall.Parent = container
@@ -82,8 +89,8 @@ local function createBox(config: TerrariumConfig): Folder
 	-- South wall (-Z)
 	local southWall = createGlassPart(
 		"SouthWall",
-		Vector3.new(size.X + thickness * 2, size.Y, thickness),
-		CFrame.new(center.X, center.Y + halfY, center.Z - halfZ - thickness / 2),
+		Vector3.new(size.X + thickness * 2, wallHeight, thickness),
+		CFrame.new(center.X, center.Y + wallCenterY, center.Z - halfZ - thickness / 2),
 		config
 	)
 	southWall.Parent = container
@@ -91,8 +98,8 @@ local function createBox(config: TerrariumConfig): Folder
 	-- East wall (+X)
 	local eastWall = createGlassPart(
 		"EastWall",
-		Vector3.new(thickness, size.Y, size.Z),
-		CFrame.new(center.X + halfX + thickness / 2, center.Y + halfY, center.Z),
+		Vector3.new(thickness, wallHeight, size.Z),
+		CFrame.new(center.X + halfX + thickness / 2, center.Y + wallCenterY, center.Z),
 		config
 	)
 	eastWall.Parent = container
@@ -100,8 +107,8 @@ local function createBox(config: TerrariumConfig): Folder
 	-- West wall (-X)
 	local westWall = createGlassPart(
 		"WestWall",
-		Vector3.new(thickness, size.Y, size.Z),
-		CFrame.new(center.X - halfX - thickness / 2, center.Y + halfY, center.Z),
+		Vector3.new(thickness, wallHeight, size.Z),
+		CFrame.new(center.X - halfX - thickness / 2, center.Y + wallCenterY, center.Z),
 		config
 	)
 	westWall.Parent = container
@@ -110,7 +117,7 @@ local function createBox(config: TerrariumConfig): Folder
 	local ceiling = createGlassPart(
 		"Ceiling",
 		Vector3.new(size.X + thickness * 2, thickness, size.Z + thickness * 2),
-		CFrame.new(center.X, center.Y + size.Y + thickness / 2, center.Z),
+		CFrame.new(center.X, center.Y + ceilingY + thickness / 2, center.Z),
 		config
 	)
 	ceiling.Parent = container
@@ -119,7 +126,7 @@ local function createBox(config: TerrariumConfig): Folder
 	local floor = createGlassPart(
 		"Floor",
 		Vector3.new(size.X + thickness * 2, thickness, size.Z + thickness * 2),
-		CFrame.new(center.X, center.Y - 80 - thickness / 2, center.Z),
+		CFrame.new(center.X, center.Y + floorY - thickness / 2, center.Z),
 		config
 	)
 	floor.Transparency = 0.95 -- Nearly invisible, just for collision
