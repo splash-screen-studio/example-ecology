@@ -233,14 +233,14 @@ local TREES: { DialogueTree } = {
 	-- RESEARCHER CHEN - Discovery and science quests
 	-- ============================================================
 	{
-		npcId = "researcher_chen",
-		npcName = "Dr. Chen",
+		npcId = "researcher_sage",
+		npcName = "Dr. Sage",
 		startNode = "greeting",
 		nodes = {
 			{
 				id = "greeting",
-				speaker = "Dr. Chen",
-				text = "Ah, a fellow explorer! I'm Dr. Chen, studying the unique ecosystem here. The biodiversity is remarkable!",
+				speaker = "Dr. Sage",
+				text = "Ah, a fellow explorer! I'm Dr. Sage, studying the unique ecosystem here. The biodiversity is remarkable!",
 				responses = {
 					{
 						text = "What kind of research do you do?",
@@ -259,7 +259,7 @@ local TREES: { DialogueTree } = {
 
 			{
 				id = "explain_research",
-				speaker = "Dr. Chen",
+				speaker = "Dr. Sage",
 				text = "I document rare species and ancient landmarks. This basin holds secrets from before recorded history. The ecological balance here is... delicate.",
 				responses = {
 					{
@@ -275,7 +275,7 @@ local TREES: { DialogueTree } = {
 
 			{
 				id = "check_quests",
-				speaker = "Dr. Chen",
+				speaker = "Dr. Sage",
 				text = "Help? Always! Science needs many eyes.",
 				responses = {
 					{
@@ -298,7 +298,7 @@ local TREES: { DialogueTree } = {
 			-- Golden Frog quest
 			{
 				id = "golden_frog_intro",
-				speaker = "Dr. Chen",
+				speaker = "Dr. Sage",
 				text = "There are whispers of a golden frog in this basin - extremely rare! Its skin shimmers like sunlight on water. I've never seen one myself.",
 				responses = {
 					{
@@ -315,7 +315,7 @@ local TREES: { DialogueTree } = {
 
 			{
 				id = "golden_frog_accept",
-				speaker = "Dr. Chen",
+				speaker = "Dr. Sage",
 				text = "Wonderful! They're said to live near the purest water sources. Be patient and quiet - they startle easily. Bring proof of your observation!",
 				responses = {
 					{
@@ -328,7 +328,7 @@ local TREES: { DialogueTree } = {
 			-- Ancient places quest
 			{
 				id = "ancient_places_intro",
-				speaker = "Dr. Chen",
+				speaker = "Dr. Sage",
 				text = "The basin has landmarks older than any maps. There's an ancient oak said to be centuries old, and a crystal spring that the locals consider sacred.",
 				responses = {
 					{
@@ -345,7 +345,7 @@ local TREES: { DialogueTree } = {
 
 			{
 				id = "ancient_places_accept",
-				speaker = "Dr. Chen",
+				speaker = "Dr. Sage",
 				text = "Excellent! Document what you find. The oak is to the northeast, and the spring is to the east. History awaits!",
 				responses = {
 					{
@@ -358,7 +358,7 @@ local TREES: { DialogueTree } = {
 			-- Encouragement for hesitant players
 			{
 				id = "encouragement_research",
-				speaker = "Dr. Chen",
+				speaker = "Dr. Sage",
 				text = "Science isn't easy, but the rewards are worth it. Come back when you feel ready - the mysteries will still be here.",
 				responses = {
 					{

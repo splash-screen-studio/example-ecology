@@ -371,6 +371,13 @@ git push -u origin feature/my-feature
 - Single responsibility modules
 - Test critical systems
 
+### NPC Naming
+- Use nature-themed names (e.g., Dr. Sage, Ranger Maya)
+- Avoid real-world first/last name combinations
+- No characters named Marcus, Chen, or other culturally-specific names
+- NPC IDs use snake_case (e.g., `researcher_sage`)
+- Display names use proper casing (e.g., "Dr. Sage")
+
 ### Implement in Twos
 - Build two instances of a feature to identify shared patterns
 - Extract frameworks/abstractions after seeing the commonality

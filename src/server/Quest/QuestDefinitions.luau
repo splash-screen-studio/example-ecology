@@ -155,7 +155,7 @@ local DEFINITIONS: { QuestDefinition } = {
 			},
 		},
 		prerequisiteQuests = { "tutorial_observation" },
-		questGiver = "researcher_chen",
+		questGiver = "researcher_sage",
 	},
 	{
 		id = "discovery_ancient_places",
@@ -190,7 +190,7 @@ local DEFINITIONS: { QuestDefinition } = {
 			},
 		},
 		prerequisiteQuests = { "tutorial_first_steps" },
-		questGiver = "researcher_chen",
+		questGiver = "researcher_sage",
 	},
 }
 

@@ -52,15 +52,15 @@ local NPC_DEFINITIONS: { HumanNPCDefinition } = {
 		skinTone = Color3.fromRGB(197, 140, 103),
 	},
 	{
-		id = "researcher_chen",
-		name = "Dr. Chen",
+		id = "researcher_sage",
+		name = "Dr. Sage",
 		title = "Ecologist",
 		description = "A scientist studying the unique ecosystem of the basin.",
 		spawnPosition = Vector3.new(100, 0, 60), -- Near the Ancient Oak area
 		spawnRotation = -90,
 		shirtColor = Color3.fromRGB(240, 240, 240), -- White lab coat
 		pantsColor = Color3.fromRGB(50, 50, 50), -- Dark pants
-		skinTone = Color3.fromRGB(224, 189, 158),
+		skinTone = Color3.fromRGB(180, 140, 100),
 	},
 }
 
@@ -131,11 +131,12 @@ end
 
 local function createHumanoidModel(definition: HumanNPCDefinition): Model
 	local model = Instance.new("Model")
-	model.Name = definition.id
+	model.Name = definition.name -- Use display name, not ID
+	model:SetAttribute("npcId", definition.id) -- Store ID for lookups
 
-	-- Create humanoid
+	-- Create humanoid (hide default name display - we use custom billboard)
 	local humanoid = Instance.new("Humanoid")
-	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Subject
+	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
 	humanoid.Parent = model
 
@@ -149,12 +150,12 @@ local function createHumanoidModel(definition: HumanNPCDefinition): Model
 	torso.Parent = model
 	model.PrimaryPart = torso
 
-	-- Visible torso
+	-- Visible torso (with collision for player interaction)
 	local upperTorso = Instance.new("Part")
 	upperTorso.Name = "UpperTorso"
 	upperTorso.Size = Vector3.new(2, 1.6, 1)
 	upperTorso.Anchored = true
-	upperTorso.CanCollide = false
+	upperTorso.CanCollide = true
 	upperTorso.BrickColor = BrickColor.new(definition.shirtColor or Color3.fromRGB(100, 100, 100))
 	upperTorso.Material = Enum.Material.Fabric
 	upperTorso.CFrame = torso.CFrame * CFrame.new(0, 0.3, 0)

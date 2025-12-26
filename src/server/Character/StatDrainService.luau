@@ -52,6 +52,7 @@ local CONFIG = {
 
 -- State
 local playerTimers: { [Player]: { [string]: number } } = {}
+local waterRestoreTimers: { [Player]: number } = {}
 local initialized = false
 
 --------------------------------------------------------------------------------
@@ -65,9 +66,20 @@ local function loadDependencies()
 	if not SpawnService then
 		SpawnService = require(script.Parent.SpawnService)
 	end
+	if not WaterController then
+		WaterController = require(script.Parent.WaterController)
+	end
 	if not Network then
 		Network = require(ReplicatedStorage.Shared.Network)
 	end
+end
+
+local function isPlayerInWater(player: Player): boolean
+	if not WaterController then
+		return false
+	end
+	local state = WaterController:getPlayerState(player)
+	return state ~= nil and (state.mode == "swimming" or state.mode == "wading")
 end
 
 local function syncStatsToClient(player: Player)
@@ -119,6 +131,35 @@ local function triggerDeath(player: Player, reason: string)
 end
 
 --------------------------------------------------------------------------------
+-- WATER RESTORATION LOGIC
+--------------------------------------------------------------------------------
+
+local function restoreThirstInWater(player: Player)
+	local data = PlayerDataService:getData(player)
+	if not data then
+		return
+	end
+
+	-- Check if player is alive
+	if CONFIG.PAUSE_WHEN_DEAD then
+		local character = player.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if not humanoid or humanoid.Health <= 0 then
+			return
+		end
+	end
+
+	-- Restore thirst up to max
+	local currentThirst = data.stats.thirst
+	local maxThirst = data.stats.maxThirst
+	if currentThirst < maxThirst then
+		local newThirst = math.min(maxThirst, currentThirst + WATER_CONFIG.thirstRestoreRate)
+		data.stats.thirst = newThirst
+		syncStatsToClient(player)
+	end
+end
+
+--------------------------------------------------------------------------------
 -- DRAIN LOGIC
 --------------------------------------------------------------------------------
 
@@ -157,12 +198,28 @@ local function updatePlayer(player: Player, deltaTime: number)
 		return
 	end
 
+	-- Check if player is in water for thirst restoration
+	local inWater = isPlayerInWater(player)
+	if inWater then
+		waterRestoreTimers[player] = (waterRestoreTimers[player] or 0) + deltaTime
+		if waterRestoreTimers[player] >= WATER_CONFIG.restoreInterval then
+			waterRestoreTimers[player] = waterRestoreTimers[player] - WATER_CONFIG.restoreInterval
+			restoreThirstInWater(player)
+		end
+	else
+		waterRestoreTimers[player] = 0
+	end
+
 	-- Update each stat timer
 	for statName, config in DRAIN_CONFIG do
 		timers[statName] = timers[statName] + deltaTime
 
 		if timers[statName] >= config.interval then
 			timers[statName] = timers[statName] - config.interval
+			-- Skip thirst drain if in water (water restores instead)
+			if statName == "thirst" and inWater then
+				continue
+			end
 			drainStat(player, statName, config)
 		end
 	end
@@ -181,6 +238,7 @@ end
 
 local function cleanupPlayer(player: Player)
 	playerTimers[player] = nil
+	waterRestoreTimers[player] = nil
 end
 
 --------------------------------------------------------------------------------

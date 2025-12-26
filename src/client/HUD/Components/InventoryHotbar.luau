@@ -13,6 +13,9 @@ local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
+-- Dependencies
+local HUDConstants = require(script.Parent.Parent.HUDConstants)
+
 -- Dependencies (lazy loaded)
 local ItemDefinitions
 
@@ -36,21 +39,23 @@ export type HotbarWidget = {
 	destroy: (self: HotbarWidget) -> (),
 }
 
--- Configuration
+-- Configuration (using shared HUDConstants for consistency)
 local CONFIG = {
 	SLOT_COUNT = 5,
-	SLOT_SIZE = 50,
-	SLOT_SPACING = 6,
-	CORNER_RADIUS = 8,
-	ICON_PADDING = 6,
+	SLOT_SIZE = HUDConstants.Sizes.TouchTarget, -- 48px touch target
+	SLOT_SPACING = HUDConstants.Spacing.ElementGap,
+	CORNER_RADIUS = HUDConstants.Sizes.CornerRadius,
+	ICON_PADDING = HUDConstants.Spacing.SmallGap + 2,
 	QUANTITY_SIZE = 16,
+	SCREEN_PADDING = HUDConstants.Spacing.ScreenPadding,
+	CONTAINER_PADDING = HUDConstants.Spacing.ContainerPadding,
 }
 
 local SLOT_COLORS = {
-	default = Color3.fromRGB(50, 50, 50),
-	selected = Color3.fromRGB(80, 120, 180),
-	empty = Color3.fromRGB(30, 30, 30),
-	hover = Color3.fromRGB(70, 70, 70),
+	default = HUDConstants.Colors.BackgroundDark,
+	selected = HUDConstants.Colors.Primary,
+	empty = HUDConstants.Colors.BackgroundDarker,
+	hover = HUDConstants.Colors.Hover,
 }
 
 -- Simple item icons (text-based for now)
@@ -180,23 +185,24 @@ function InventoryHotbar.create(parent: GuiObject): HotbarWidget
 	loadDependencies()
 
 	-- Main container
+	local containerPad = CONFIG.CONTAINER_PADDING
 	local totalWidth = CONFIG.SLOT_COUNT * CONFIG.SLOT_SIZE + (CONFIG.SLOT_COUNT - 1) * CONFIG.SLOT_SPACING
 	local frame = Instance.new("Frame")
 	frame.Name = "InventoryHotbar"
-	frame.Size = UDim2.new(0, totalWidth + 16, 0, CONFIG.SLOT_SIZE + 16)
-	frame.Position = UDim2.new(0.5, -totalWidth / 2 - 8, 1, -CONFIG.SLOT_SIZE - 26)
-	frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	frame.BackgroundTransparency = 0.5
+	frame.Size = UDim2.new(0, totalWidth + containerPad * 2, 0, CONFIG.SLOT_SIZE + containerPad * 2)
+	frame.Position = UDim2.new(0.5, -totalWidth / 2 - containerPad, 1, -CONFIG.SLOT_SIZE - CONFIG.SCREEN_PADDING - containerPad)
+	frame.BackgroundColor3 = HUDConstants.Colors.Background
+	frame.BackgroundTransparency = HUDConstants.Transparency.Background
 	frame.BorderSizePixel = 0
 	frame.Parent = parent
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 12)
+	corner.CornerRadius = UDim.new(0, CONFIG.CORNER_RADIUS)
 	corner.Parent = frame
 
 	local padding = Instance.new("UIPadding")
-	padding.PaddingLeft = UDim.new(0, 8)
-	padding.PaddingTop = UDim.new(0, 8)
+	padding.PaddingLeft = UDim.new(0, containerPad)
+	padding.PaddingTop = UDim.new(0, containerPad)
 	padding.Parent = frame
 
 	-- Create widget first (for closure)
