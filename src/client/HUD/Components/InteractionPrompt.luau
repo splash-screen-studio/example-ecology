@@ -257,12 +257,17 @@ function InteractionPrompt.create(parent: Instance): PromptWidget
 
 	-- Keyboard interaction (E key)
 	local inputConn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if input.KeyCode == Enum.KeyCode.E then
+			print("[InteractionPrompt] E pressed, gameProcessed:", gameProcessed, "currentTarget:", widget.currentTarget)
+		end
+
 		if gameProcessed then
 			return
 		end
 
 		if input.KeyCode == Enum.KeyCode.E and widget.currentTarget then
 			local targetId = widget.currentTarget:GetAttribute("InteractableId")
+			print("[InteractionPrompt] E key, targetId:", targetId)
 			if targetId and widget.onInteract then
 				widget.onInteract(targetId)
 			end
