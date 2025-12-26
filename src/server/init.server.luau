@@ -47,6 +47,7 @@ InteractionService:init()
 
 -- Initialize WorldObjectService for spawning world objects
 WorldObjectService:init()
+WorldObjectService:spawnForCurrentPlace()
 
 -- WorldBuilder is available for terrain generation
 -- Call WorldBuilder:buildWorld() to generate terrain
