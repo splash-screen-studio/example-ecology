@@ -12,3 +12,34 @@ profile.svg
 
 # Time trace
 trace.json
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+secrets.json
+credentials.json
+
+# Rojo generated files
+sourcemap.json
+*.rbxl
+*.rbxlx
+
+# Roblox model files (if generated)
+*.rbxm
+*.rbxmx
+
+# Wally (Roblox package manager)
+Packages/
+wally.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
