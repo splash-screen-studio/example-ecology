@@ -10,6 +10,9 @@ local ItemTypes = {}
 -- Item categories
 export type ItemCategory = "food" | "tool" | "resource" | "seed" | "quest" | "special"
 
+-- Pickup categories for audio feedback
+export type PickupCategory = "organic" | "liquid" | "wood" | "stone" | "metal" | "fabric" | "special"
+
 -- Rarity affects drop rates and value
 export type ItemRarity = "common" | "uncommon" | "rare" | "legendary"
 
@@ -47,6 +50,9 @@ export type ItemDefinition = {
 	-- Visual
 	icon: string?, -- Asset ID for UI
 	model: string?, -- Asset ID for world model
+
+	-- Audio feedback
+	pickupCategory: PickupCategory?, -- Category for pickup sound selection
 }
 
 -- Inventory slot (runtime state)

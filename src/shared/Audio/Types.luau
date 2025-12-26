@@ -65,6 +65,13 @@ export type MusicTrack = {
 	timeOfDay: { min: number, max: number }?, -- Hour range (0-24)
 }
 
+-- Pickup sound definition (for item pickup feedback)
+export type PickupSound = {
+	sounds: { string }, -- List of sound IDs to pick from randomly
+	volume: number,
+	pitchVariation: number, -- Random pitch range (0.1 = +/-10%)
+}
+
 -- Audio settings (saved per player)
 export type AudioSettings = {
 	masterVolume: number,

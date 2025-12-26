@@ -101,6 +101,10 @@ function ClientNetwork:pickupItem(objectId: string)
 	})
 end
 
+function ClientNetwork:onPickupEffect(callback: (Types.PickupEffectPayload) -> ())
+	registerCallback("PickupEffect", callback)
+end
+
 --------------------------------------------------------------------------------
 -- INTERACTION API
 --------------------------------------------------------------------------------

@@ -23,6 +23,7 @@ local InventoryHotbar = require(script.Components.InventoryHotbar)
 local InteractionPrompt = require(script.Components.InteractionPrompt)
 local NotificationToast = require(script.Components.NotificationToast)
 local DeathScreen = require(script.Components.DeathScreen)
+local DialoguePanel = require(script.Components.DialoguePanel)
 
 -- Dependencies (lazy loaded)
 local Network
@@ -39,6 +40,7 @@ local hotbarWidget: InventoryHotbar.HotbarWidget?
 local interactionWidget: InteractionPrompt.PromptWidget?
 local toastWidget: NotificationToast.ToastWidget?
 local deathWidget: DeathScreen.DeathScreenWidget?
+local dialogueWidget: DialoguePanel.DialoguePanelWidget?
 
 -- Connection tracking
 local connections: { RBXScriptConnection } = {}
@@ -138,6 +140,29 @@ local function setupNetworkListeners()
 		end
 	end)
 	table.insert(connections, questUpdateConn)
+
+	-- Listen for dialogue events from server
+	local dialogueConn = Network.Events.InteractComplete.OnClientEvent:Connect(function(data: any)
+		if not dialogueWidget then
+			return
+		end
+
+		-- Handle dialogue display
+		if data.type == "dialogue" then
+			dialogueWidget:show({
+				type = data.type,
+				npcName = data.npcName,
+				speaker = data.speaker,
+				text = data.text,
+				responses = data.responses or {},
+				autoAdvance = data.autoAdvance,
+			})
+		-- Handle dialogue end
+		elseif data.type == "dialogue_end" then
+			dialogueWidget:hide()
+		end
+	end)
+	table.insert(connections, dialogueConn)
 end
 
 --------------------------------------------------------------------------------
@@ -171,6 +196,28 @@ function HUD:init()
 
 	-- Create death screen overlay
 	deathWidget = DeathScreen.create(screenGui)
+
+	-- Create dialogue panel (bottom-center, for NPC conversations)
+	dialogueWidget = DialoguePanel.create(screenGui)
+
+	-- Setup dialogue response callback
+	dialogueWidget.onResponse = function(responseIndex: number)
+		loadDependencies()
+		-- Send response back to server via Interact
+		Network.Functions.Interact:InvokeServer({
+			interactionType = "dialogue_response",
+			responseIndex = responseIndex,
+		})
+	end
+
+	-- Setup dialogue close callback
+	dialogueWidget.onClose = function()
+		loadDependencies()
+		-- Notify server that dialogue was closed/skipped
+		Network.Functions.Interact:InvokeServer({
+			interactionType = "dialogue_close",
+		})
+	end
 
 	-- Setup hotbar item use callback
 	hotbarWidget.onUseItem = function(item: InventoryHotbar.InventoryItem)
@@ -269,6 +316,11 @@ function HUD:destroy()
 	if deathWidget then
 		deathWidget:destroy()
 		deathWidget = nil
+	end
+
+	if dialogueWidget then
+		dialogueWidget:destroy()
+		dialogueWidget = nil
 	end
 
 	-- Destroy GUI

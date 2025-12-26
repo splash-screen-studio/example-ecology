@@ -213,6 +213,56 @@ AudioConfig.FootstepMaterials = {
 }
 
 --------------------------------------------------------------------------------
+-- PICKUP SOUNDS (by category)
+--------------------------------------------------------------------------------
+
+-- Each category has multiple sounds for variety, played randomly on pickup
+AudioConfig.PickupSounds = {
+	organic = {
+		-- Soft rustle sounds for berries, apples, herbs, seeds
+		sounds = { "rbxassetid://9114256959", "rbxassetid://9114257028", "rbxassetid://9114256888" },
+		volume = 0.5,
+		pitchVariation = 0.1,
+	},
+	liquid = {
+		-- Slosh/liquid sounds for water bottles, potions
+		sounds = { "rbxassetid://5930519356", "rbxassetid://142431247", "rbxassetid://5930519356" },
+		volume = 0.55,
+		pitchVariation = 0.15,
+	},
+	wood = {
+		-- Woody clunk sounds for sticks, logs, wooden items
+		sounds = { "rbxassetid://9064714296", "rbxassetid://9083837523", "rbxassetid://9064714296" },
+		volume = 0.5,
+		pitchVariation = 0.12,
+	},
+	stone = {
+		-- Hard clack sounds for rocks, flint, shells
+		sounds = { "rbxassetid://9064974448", "rbxassetid://833564121", "rbxassetid://9064974448" },
+		volume = 0.55,
+		pitchVariation = 0.08,
+	},
+	metal = {
+		-- Metallic ting sounds for tools, metal items
+		sounds = { "rbxassetid://6895079853", "rbxassetid://6895079853", "rbxassetid://6895079853" },
+		volume = 0.5,
+		pitchVariation = 0.1,
+	},
+	fabric = {
+		-- Soft whoosh sounds for cloth, rope, nets
+		sounds = { "rbxassetid://9064853890", "rbxassetid://9064853890", "rbxassetid://9064853890" },
+		volume = 0.45,
+		pitchVariation = 0.15,
+	},
+	special = {
+		-- Magical chime sounds for quest items, rare items
+		sounds = { "rbxassetid://6895079853", "rbxassetid://6895079853", "rbxassetid://6895079853" },
+		volume = 0.6,
+		pitchVariation = 0.05,
+	},
+}
+
+--------------------------------------------------------------------------------
 -- SOUND EFFECTS
 --------------------------------------------------------------------------------
 
@@ -460,6 +510,10 @@ end
 
 function AudioConfig.getMusicTrack(id: string): Types.MusicTrack?
 	return AudioConfig.MusicTracks[id]
+end
+
+function AudioConfig.getPickupSound(category: string): Types.PickupSound?
+	return AudioConfig.PickupSounds[category]
 end
 
 return AudioConfig

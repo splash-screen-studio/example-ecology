@@ -38,6 +38,14 @@ export type PickupItemRequest = {
 	objectId: string, -- The world object to pick up
 }
 
+-- Pickup effect payload (Server -> Client)
+export type PickupEffectPayload = {
+	itemId: string,
+	pickupCategory: string, -- organic, liquid, wood, stone, metal, fabric, special
+	position: Vector3,
+	targetId: string?, -- Optional instance ID for the model to animate
+}
+
 --------------------------------------------------------------------------------
 -- INTERACTION EVENTS
 --------------------------------------------------------------------------------

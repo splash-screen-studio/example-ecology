@@ -25,6 +25,7 @@ Items.apple = {
 	baseValue = 5,
 	usable = true,
 	consumable = true,
+	pickupCategory = "organic",
 	effects = {
 		hungerRestore = 15,
 		thirstRestore = 5,
@@ -42,6 +43,7 @@ Items.berries = {
 	baseValue = 3,
 	usable = true,
 	consumable = true,
+	pickupCategory = "organic",
 	effects = {
 		hungerRestore = 8,
 		thirstRestore = 3,
@@ -59,6 +61,7 @@ Items.fish = {
 	baseValue = 8,
 	usable = true,
 	consumable = true,
+	pickupCategory = "organic",
 	effects = {
 		hungerRestore = 25,
 	},
@@ -75,6 +78,7 @@ Items.cooked_fish = {
 	baseValue = 15,
 	usable = true,
 	consumable = true,
+	pickupCategory = "organic",
 	effects = {
 		hungerRestore = 40,
 		thirstRestore = -5,
@@ -92,6 +96,7 @@ Items.water_bottle = {
 	baseValue = 2,
 	usable = true,
 	consumable = true,
+	pickupCategory = "liquid",
 	effects = {
 		thirstRestore = 30,
 	},
@@ -108,6 +113,7 @@ Items.herbal_tea = {
 	baseValue = 20,
 	usable = true,
 	consumable = true,
+	pickupCategory = "liquid",
 	effects = {
 		thirstRestore = 20,
 		healthRestore = 15,
@@ -131,6 +137,7 @@ Items.grass_seeds = {
 	baseValue = 2,
 	usable = true,
 	consumable = true,
+	pickupCategory = "organic",
 	effects = {
 		ecoAction = "plant",
 		targetSpecies = "wetland_grass",
@@ -148,6 +155,7 @@ Items.lily_seeds = {
 	baseValue = 10,
 	usable = true,
 	consumable = true,
+	pickupCategory = "organic",
 	effects = {
 		ecoAction = "plant",
 		targetSpecies = "water_lily",
@@ -165,6 +173,7 @@ Items.prairie_seeds = {
 	baseValue = 2,
 	usable = true,
 	consumable = true,
+	pickupCategory = "organic",
 	effects = {
 		ecoAction = "plant",
 		targetSpecies = "plains_grass",
@@ -187,6 +196,7 @@ Items.watering_can = {
 	usable = true,
 	consumable = false,
 	cooldown = 3,
+	pickupCategory = "metal",
 	effects = {
 		ecoAction = "water",
 	},
@@ -204,6 +214,7 @@ Items.fishing_rod = {
 	usable = true,
 	consumable = false,
 	cooldown = 5,
+	pickupCategory = "wood",
 }
 
 Items.binoculars = {
@@ -218,6 +229,7 @@ Items.binoculars = {
 	usable = true,
 	consumable = false,
 	cooldown = 1,
+	pickupCategory = "metal",
 }
 
 Items.net = {
@@ -232,6 +244,7 @@ Items.net = {
 	usable = true,
 	consumable = false,
 	cooldown = 2,
+	pickupCategory = "fabric",
 }
 
 Items.shovel = {
@@ -246,6 +259,7 @@ Items.shovel = {
 	usable = true,
 	consumable = false,
 	cooldown = 2,
+	pickupCategory = "metal",
 	effects = {
 		ecoAction = "plant",
 	},
@@ -266,6 +280,7 @@ Items.wood = {
 	baseValue = 3,
 	usable = false,
 	consumable = false,
+	pickupCategory = "wood",
 }
 
 Items.stone = {
@@ -279,6 +294,7 @@ Items.stone = {
 	baseValue = 2,
 	usable = false,
 	consumable = false,
+	pickupCategory = "stone",
 }
 
 Items.fiber = {
@@ -292,6 +308,7 @@ Items.fiber = {
 	baseValue = 1,
 	usable = false,
 	consumable = false,
+	pickupCategory = "fabric",
 }
 
 Items.feather = {
@@ -305,6 +322,7 @@ Items.feather = {
 	baseValue = 15,
 	usable = false,
 	consumable = false,
+	pickupCategory = "organic",
 }
 
 Items.shell = {
@@ -318,6 +336,7 @@ Items.shell = {
 	baseValue = 30,
 	usable = false,
 	consumable = false,
+	pickupCategory = "stone",
 }
 
 --------------------------------------------------------------------------------
@@ -335,6 +354,7 @@ Items.animal_feed = {
 	baseValue = 15,
 	usable = true,
 	consumable = true,
+	pickupCategory = "organic",
 	effects = {
 		ecoAction = "feed",
 	},
@@ -351,6 +371,7 @@ Items.cleaning_supplies = {
 	baseValue = 20,
 	usable = true,
 	consumable = true,
+	pickupCategory = "fabric",
 	effects = {
 		ecoAction = "clean",
 	},
@@ -368,6 +389,7 @@ Items.ecosystem_scanner = {
 	usable = true,
 	consumable = false,
 	cooldown = 10,
+	pickupCategory = "special",
 }
 
 --------------------------------------------------------------------------------
@@ -385,6 +407,7 @@ Items.research_sample = {
 	baseValue = 0, -- Can't sell quest items
 	usable = false,
 	consumable = false,
+	pickupCategory = "special",
 }
 
 Items.rare_flower = {
@@ -398,6 +421,7 @@ Items.rare_flower = {
 	baseValue = 0,
 	usable = false,
 	consumable = false,
+	pickupCategory = "special",
 }
 
 --------------------------------------------------------------------------------

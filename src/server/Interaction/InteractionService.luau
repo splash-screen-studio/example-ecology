@@ -132,10 +132,61 @@ local function handlePickup(player: Player, target: Instance, config: Interactab
 	local success = InventoryService:addItem(player, config.itemId, quantity)
 
 	if success then
-		-- Remove from world
-		if target:IsA("Model") or target:IsA("BasePart") then
-			target:Destroy()
+		-- Get pickup position before destroying
+		local pickupPosition = Vector3.zero
+		if target:IsA("BasePart") then
+			pickupPosition = target.Position
+		elseif target:IsA("Model") then
+			local primaryPart = target.PrimaryPart or target:FindFirstChildWhichIsA("BasePart")
+			if primaryPart then
+				pickupPosition = primaryPart.Position
+			end
 		end
+
+		-- Get item definition to find pickup category
+		local ItemDefinitions = require(ReplicatedStorage.Shared.Items.ItemDefinitions)
+		local itemDef = ItemDefinitions.get(config.itemId)
+		local pickupCategory = "organic" -- default
+		if itemDef and itemDef.pickupCategory then
+			pickupCategory = itemDef.pickupCategory
+		end
+
+		-- Fire pickup effect event to client (BEFORE destroying the model)
+		-- This allows the client to play the scale/fade animation on the model
+		loadDependencies()
+		Network.Events.PickupEffect:FireClient(player, {
+			itemId = config.itemId,
+			pickupCategory = pickupCategory,
+			position = pickupPosition,
+			targetId = config.id, -- Pass the interactable ID so client can find the model
+		})
+
+		-- Delay destruction slightly to allow client to start animation
+		-- The client will handle the actual visual destruction via tween
+		task.delay(0.05, function()
+			if target and target.Parent then
+				-- Make invisible immediately (client handles animation)
+				if target:IsA("BasePart") then
+					target.CanCollide = false
+					target.Transparency = 1
+				elseif target:IsA("Model") then
+					for _, desc in target:GetDescendants() do
+						if desc:IsA("BasePart") then
+							desc.CanCollide = false
+							desc.Transparency = 1
+						end
+					end
+				end
+			end
+		end)
+
+		-- Fully destroy after animation would complete
+		task.delay(0.4, function()
+			if target and target.Parent then
+				target:Destroy()
+			end
+		end)
+
 		InteractionService:unregisterInteractable(target)
 
 		return { success = true, message = string.format("Picked up %s", config.displayName) }
@@ -153,6 +204,34 @@ local function handleHarvest(player: Player, target: Instance, config: Interacta
 	local success = InventoryService:addItem(player, config.itemId, quantity)
 
 	if success then
+		-- Get harvest position for effects
+		local harvestPosition = Vector3.zero
+		if target:IsA("BasePart") then
+			harvestPosition = target.Position
+		elseif target:IsA("Model") then
+			local primaryPart = target.PrimaryPart or target:FindFirstChildWhichIsA("BasePart")
+			if primaryPart then
+				harvestPosition = primaryPart.Position
+			end
+		end
+
+		-- Get item definition to find pickup category
+		local ItemDefinitions = require(ReplicatedStorage.Shared.Items.ItemDefinitions)
+		local itemDef = ItemDefinitions.get(config.itemId)
+		local pickupCategory = "organic" -- default for harvested items
+		if itemDef and itemDef.pickupCategory then
+			pickupCategory = itemDef.pickupCategory
+		end
+
+		-- Fire pickup effect event to client (for audio/particles)
+		loadDependencies()
+		Network.Events.PickupEffect:FireClient(player, {
+			itemId = config.itemId,
+			pickupCategory = pickupCategory,
+			position = harvestPosition,
+			targetId = config.id,
+		})
+
 		-- Hide temporarily for respawn
 		if target:IsA("Model") or target:IsA("BasePart") then
 			local respawnTime = config.respawnTime or 60

@@ -31,6 +31,7 @@ local EventDefinitions = {
 	{ name = "UseItem", type = "event" },
 	{ name = "DropItem", type = "event" },
 	{ name = "PickupItem", type = "event" },
+	{ name = "PickupEffect", type = "event" }, -- Server -> Client for pickup visual/audio feedback
 
 	-- Interactions
 	{ name = "Interact", type = "function" }, -- Returns response
