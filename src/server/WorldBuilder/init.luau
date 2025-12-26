@@ -11,6 +11,7 @@
 
 local TerrainGenerator = require(script.TerrainGenerator)
 local Terrarium = require(script.Terrarium)
+local PlaceConfig = require(game:GetService("ReplicatedStorage").Shared.PlaceConfig)
 
 local WorldBuilder = {}
 
@@ -19,6 +20,7 @@ export type WorldConfig = {
 	size: Vector3?,
 	center: Vector3?,
 	waterLevel: number?,
+	baseHeight: number?,
 	seed: number?,
 	terrariumShape: "dome" | "box"?,
 	skipTerrain: boolean?,
@@ -26,16 +28,18 @@ export type WorldConfig = {
 	skipTerrarium: boolean?,
 }
 
--- Default configuration for Verdant Basin
--- 500x500 studs provides good exploration space while maintaining performance
--- for 20-50 animals, NPCs, and multiplayer
-local DEFAULT_CONFIG: WorldConfig = {
-	size = Vector3.new(500, 150, 500),
-	center = Vector3.zero,
-	waterLevel = 5,
-	seed = 42,
-	terrariumShape = "box",
-}
+-- Get defaults from PlaceConfig (shared across all places)
+local function getDefaultConfig(): WorldConfig
+	local terrainConfig = PlaceConfig.getTerrainConfig()
+	return {
+		size = terrainConfig.size,
+		center = terrainConfig.center,
+		waterLevel = terrainConfig.waterLevel,
+		baseHeight = terrainConfig.baseHeight,
+		seed = terrainConfig.seed,
+		terrariumShape = terrainConfig.terrariumShape,
+	}
+end
 
 --------------------------------------------------------------------------------
 -- WORLD BUILDING
@@ -43,20 +47,23 @@ local DEFAULT_CONFIG: WorldConfig = {
 
 function WorldBuilder:buildWorld(config: WorldConfig?)
 	config = config or {}
+	local defaults = getDefaultConfig()
 
-	-- Merge with defaults
+	-- Merge with defaults from PlaceConfig
 	local finalConfig = {
-		size = config.size or DEFAULT_CONFIG.size,
-		center = config.center or DEFAULT_CONFIG.center,
-		waterLevel = config.waterLevel or DEFAULT_CONFIG.waterLevel,
-		seed = config.seed or DEFAULT_CONFIG.seed,
-		terrariumShape = config.terrariumShape or DEFAULT_CONFIG.terrariumShape,
+		size = config.size or defaults.size,
+		center = config.center or defaults.center,
+		waterLevel = config.waterLevel or defaults.waterLevel,
+		baseHeight = config.baseHeight or defaults.baseHeight,
+		seed = config.seed or defaults.seed,
+		terrariumShape = config.terrariumShape or defaults.terrariumShape,
 	}
 
 	print("========================================")
 	print("[WorldBuilder] Starting world generation")
 	print(string.format("  Size: %s", tostring(finalConfig.size)))
 	print(string.format("  Center: %s", tostring(finalConfig.center)))
+	print(string.format("  Base Height: %d", finalConfig.baseHeight))
 	print(string.format("  Water Level: %d", finalConfig.waterLevel))
 	print(string.format("  Seed: %d", finalConfig.seed))
 	print("========================================")
@@ -69,7 +76,7 @@ function WorldBuilder:buildWorld(config: WorldConfig?)
 		TerrainGenerator:generate({
 			center = finalConfig.center,
 			size = finalConfig.size,
-			baseHeight = 0,
+			baseHeight = finalConfig.baseHeight,
 			waterLevel = finalConfig.waterLevel,
 			seed = finalConfig.seed,
 		})
@@ -104,9 +111,10 @@ end
 
 function WorldBuilder:clearWorld(config: WorldConfig?)
 	config = config or {}
+	local defaults = getDefaultConfig()
 	local finalConfig = {
-		size = config.size or DEFAULT_CONFIG.size,
-		center = config.center or DEFAULT_CONFIG.center,
+		size = config.size or defaults.size,
+		center = config.center or defaults.center,
 	}
 
 	print("[WorldBuilder] Clearing world...")
