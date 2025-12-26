@@ -39,8 +39,8 @@ local DRAIN_CONFIG = {
 
 -- Water restoration config
 local WATER_CONFIG = {
-	thirstRestoreRate = 3, -- Amount to restore per interval while in water
-	restoreInterval = 5, -- Seconds between restoration ticks
+	thirstRestoreRate = 8, -- Amount to restore per interval while in water (fast, noticeable)
+	restoreInterval = 1, -- Seconds between restoration ticks (frequent updates)
 }
 
 local CONFIG = {
@@ -75,6 +75,7 @@ local function loadDependencies()
 end
 
 local function isPlayerInWater(player: Player): boolean
+	loadDependencies() -- Ensure WaterController is loaded
 	if not WaterController then
 		return false
 	end
