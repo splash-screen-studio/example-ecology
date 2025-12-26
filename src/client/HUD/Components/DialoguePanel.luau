@@ -81,6 +81,12 @@ local CONFIG = {
 	-- Animation
 	FADE_TIME = 0.25,
 	SLIDE_DISTANCE = 30,
+
+	-- Positioning: space above the inventory hotbar
+	-- Hotbar height: SLOT_SIZE(48) + CONTAINER_PADDING(12)*2 = 72
+	-- Plus gap between dialogue and hotbar
+	HOTBAR_HEIGHT = 72,
+	HOTBAR_GAP = 12,
 }
 
 --------------------------------------------------------------------------------
@@ -233,11 +239,14 @@ local function createResponseButton(index: number, text: string): TextButton
 end
 
 local function createPanel(): Frame
+	-- Calculate Y position: above hotbar
+	local bottomOffset = Spacing.ScreenPadding + CONFIG.HOTBAR_HEIGHT + CONFIG.HOTBAR_GAP
+
 	local panel = Instance.new("Frame")
 	panel.Name = "DialoguePanel"
 	panel.Size = UDim2.new(0, CONFIG.PANEL_WIDTH, 0, CONFIG.PANEL_MIN_HEIGHT)
 	panel.AnchorPoint = Vector2.new(0.5, 1)
-	panel.Position = UDim2.new(0.5, 0, 1, -Spacing.ScreenPadding - CONFIG.SLIDE_DISTANCE)
+	panel.Position = UDim2.new(0.5, 0, 1, -bottomOffset - CONFIG.SLIDE_DISTANCE)
 	panel.BackgroundColor3 = Colors.Background
 	panel.BackgroundTransparency = Transparency.Background
 	panel.BorderSizePixel = 0
@@ -270,8 +279,10 @@ local function animateIn(panel: Frame)
 	panel.Visible = true
 	panel.BackgroundTransparency = 1
 
-	local targetPos = UDim2.new(0.5, 0, 1, -Spacing.ScreenPadding)
-	panel.Position = UDim2.new(0.5, 0, 1, -Spacing.ScreenPadding + CONFIG.SLIDE_DISTANCE)
+	-- Position above hotbar
+	local bottomOffset = Spacing.ScreenPadding + CONFIG.HOTBAR_HEIGHT + CONFIG.HOTBAR_GAP
+	local targetPos = UDim2.new(0.5, 0, 1, -bottomOffset)
+	panel.Position = UDim2.new(0.5, 0, 1, -bottomOffset + CONFIG.SLIDE_DISTANCE)
 
 	local tweenInfo = TweenInfo.new(CONFIG.FADE_TIME, Animation.EasingStyle, Animation.EasingDirection)
 
@@ -288,7 +299,9 @@ local function animateIn(panel: Frame)
 end
 
 local function animateOut(panel: Frame, callback: (() -> ())?)
-	local targetPos = UDim2.new(0.5, 0, 1, -Spacing.ScreenPadding + CONFIG.SLIDE_DISTANCE)
+	-- Position above hotbar
+	local bottomOffset = Spacing.ScreenPadding + CONFIG.HOTBAR_HEIGHT + CONFIG.HOTBAR_GAP
+	local targetPos = UDim2.new(0.5, 0, 1, -bottomOffset + CONFIG.SLIDE_DISTANCE)
 	local tweenInfo = TweenInfo.new(CONFIG.FADE_TIME, Animation.EasingStyle, Enum.EasingDirection.In)
 
 	local positionTween = TweenService:Create(panel, tweenInfo, {

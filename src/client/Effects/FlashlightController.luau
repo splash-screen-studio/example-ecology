@@ -29,8 +29,10 @@ local TimeController: any = nil
 -- Configuration
 local CONFIG = {
 	-- Hysteresis thresholds (ambient light 0-1 scale)
-	TURN_ON_THRESHOLD = 0.2, -- Turn ON when ambient < this
-	TURN_OFF_THRESHOLD = 0.35, -- Turn OFF when ambient > this
+	-- Night preset OutdoorAmbient RGB(50,50,70) = ~0.20 luminance
+	-- Day preset OutdoorAmbient RGB(128,128,128) = ~0.50 luminance
+	TURN_ON_THRESHOLD = 0.25, -- Turn ON when ambient < this (triggers during night)
+	TURN_OFF_THRESHOLD = 0.40, -- Turn OFF when ambient > this (triggers during day)
 	HYSTERESIS_DURATION = 1.0, -- Seconds threshold must be sustained
 
 	-- Light properties
@@ -80,31 +82,58 @@ end
 
 --[[
     Calculate the current ambient light level (0-1 scale).
-    Samples both Lighting.Ambient and Lighting.OutdoorAmbient,
-    taking the average luminance.
+
+    Uses multiple signals for robust darkness detection:
+    1. Lighting.Ambient - direct ambient color
+    2. Lighting.OutdoorAmbient - outdoor environment color
+    3. Lighting.Brightness - overall scene brightness
+    4. Lighting.ClockTime - time of day (night is inherently darker)
+
+    This multi-signal approach is more robust than relying on any single value,
+    as lighting presets may vary between places.
 ]]
 local function getAmbientLightLevel(): number
-	local ambient = Lighting.Ambient
-	local outdoor = Lighting.OutdoorAmbient
-
 	-- Calculate perceived luminance using standard coefficients
 	-- (human eye is most sensitive to green, then red, then blue)
 	local function luminance(color: Color3): number
 		return 0.299 * color.R + 0.587 * color.G + 0.114 * color.B
 	end
 
+	local ambient = Lighting.Ambient
+	local outdoor = Lighting.OutdoorAmbient
+
 	local ambientLum = luminance(ambient)
 	local outdoorLum = luminance(outdoor)
 
-	-- Use the brighter of the two (player could be indoors or outdoors)
-	-- Also factor in Lighting.Brightness which affects overall scene brightness
-	local baseLuminance = math.max(ambientLum, outdoorLum)
+	-- Weight ambient luminance higher as it's the "true" darkness indicator
+	-- OutdoorAmbient can remain somewhat bright even at night for sky reflections
+	local colorLuminance = ambientLum * 0.7 + outdoorLum * 0.3
 
-	-- Scale by brightness (typical range 0-3, normalize to 0-1 contribution)
-	local brightnessScale = math.clamp(Lighting.Brightness / 2, 0, 1)
+	-- Factor in Lighting.Brightness (typical range 0-3)
+	-- Night brightness ~0.3, Day brightness ~2.0+
+	local brightnessContribution = math.clamp(Lighting.Brightness / 3, 0, 1)
 
-	-- Combine: even in dark ambient, high brightness means it's still lit
-	local combinedLevel = math.max(baseLuminance, brightnessScale * 0.5)
+	-- Factor in time of day (ClockTime 0-24)
+	-- This provides an additional signal independent of lighting presets
+	local clockTime = Lighting.ClockTime
+	local timeOfDayFactor: number
+	if clockTime >= 7 and clockTime < 17 then
+		-- Full daylight (7 AM - 5 PM)
+		timeOfDayFactor = 1.0
+	elseif clockTime >= 19 or clockTime < 5 then
+		-- Night (7 PM - 5 AM)
+		timeOfDayFactor = 0.1
+	elseif clockTime >= 5 and clockTime < 7 then
+		-- Dawn transition (5 AM - 7 AM)
+		timeOfDayFactor = (clockTime - 5) / 2 * 0.9 + 0.1
+	else
+		-- Dusk transition (5 PM - 7 PM)
+		timeOfDayFactor = 1.0 - ((clockTime - 17) / 2 * 0.9)
+	end
+
+	-- Combine signals with weights
+	-- Color luminance: 40%, Brightness: 30%, Time of day: 30%
+	local combinedLevel = colorLuminance * 0.4 + brightnessContribution * 0.3 + timeOfDayFactor * 0.3
 
 	return math.clamp(combinedLevel, 0, 1)
 end
