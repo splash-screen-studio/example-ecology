@@ -168,18 +168,6 @@ local function createSlot(index: number, onClicked: (number) -> (), onRightClick
 	corner.CornerRadius = UDim.new(0, CONFIG.CORNER_RADIUS)
 	corner.Parent = slot
 
-	-- Slot number
-	local numLabel = Instance.new("TextLabel")
-	numLabel.Name = "SlotNumber"
-	numLabel.Size = UDim2.new(0, 14, 0, 14)
-	numLabel.Position = UDim2.new(0, 2, 0, 2)
-	numLabel.BackgroundTransparency = 1
-	numLabel.Text = tostring(index)
-	numLabel.TextSize = 10
-	numLabel.Font = Enum.Font.GothamBold
-	numLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-	numLabel.Parent = slot
-
 	-- Item icon (emoji)
 	local iconLabel = Instance.new("TextLabel")
 	iconLabel.Name = "Icon"
