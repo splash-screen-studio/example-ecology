@@ -2,12 +2,19 @@
 --[[
     FootstepService
 
-    Material-aware footstep sounds.
+    Material-aware footstep sounds with hysteresis.
     Based on community best practices:
     - Velocity-based detection with dynamic intervals
     - Clone sounds and destroy after playback (no pooling)
     - Don't interrupt playing sounds
     - Disable default Roblox footsteps
+    - Material hysteresis prevents sound thrashing on terrain boundaries
+
+    Hysteresis Algorithm:
+    - Track last 5 material samples in a sliding window
+    - Current material gets +1 "sticky" bias vote
+    - New material must appear 3+ times to trigger switch
+    - Prevents rapid switching when walking on terrain edges
 
     References:
     - Smile4's Material Footsteps
@@ -45,6 +52,15 @@ local lastMaterial: Enum.Material? = nil
 local volumeMultiplier = 1
 local isRunning = false
 
+-- Material hysteresis (prevents thrashing on terrain boundaries)
+local HYSTERESIS = {
+	SAMPLE_COUNT = 5, -- Number of samples to track
+	SWITCH_THRESHOLD = 3, -- New material must appear this many times to switch
+	STICKY_BIAS = 1, -- Extra "votes" for current material (stickiness)
+}
+local materialHistory: { Enum.Material } = {}
+local activeMaterial: Enum.Material? = nil
+
 --------------------------------------------------------------------------------
 -- HELPERS
 --------------------------------------------------------------------------------
@@ -81,7 +97,7 @@ end
 -- MATERIAL DETECTION
 --------------------------------------------------------------------------------
 
-local function getGroundMaterial(): Enum.Material?
+local function raycastGroundMaterial(): Enum.Material?
 	local character = getCharacter()
 	local rootPart = getRootPart()
 
@@ -104,6 +120,67 @@ local function getGroundMaterial(): Enum.Material?
 	end
 
 	return nil
+end
+
+--[[
+	Get stabilized ground material using hysteresis.
+	Prevents rapid switching when walking on terrain boundaries.
+
+	Algorithm:
+	1. Track last N material samples in a sliding window
+	2. Count votes for each material (current material gets sticky bias)
+	3. Only switch when a different material wins by threshold
+]]
+local function getGroundMaterial(): Enum.Material?
+	local rawMaterial = raycastGroundMaterial()
+	if not rawMaterial then
+		return activeMaterial -- Keep last known material if raycast fails
+	end
+
+	-- Add to history (sliding window)
+	table.insert(materialHistory, rawMaterial)
+	if #materialHistory > HYSTERESIS.SAMPLE_COUNT then
+		table.remove(materialHistory, 1)
+	end
+
+	-- Count votes for each material
+	local votes: { [Enum.Material]: number } = {}
+	for _, mat in materialHistory do
+		votes[mat] = (votes[mat] or 0) + 1
+	end
+
+	-- Apply sticky bias to current active material
+	if activeMaterial and votes[activeMaterial] then
+		votes[activeMaterial] = votes[activeMaterial] + HYSTERESIS.STICKY_BIAS
+	end
+
+	-- Find material with most votes
+	local bestMaterial: Enum.Material? = nil
+	local bestVotes = 0
+	for mat, count in votes do
+		if count > bestVotes then
+			bestVotes = count
+			bestMaterial = mat
+		end
+	end
+
+	-- Only switch if new material exceeds threshold
+	if bestMaterial and bestMaterial ~= activeMaterial then
+		local newMaterialVotes = votes[bestMaterial] or 0
+		-- Subtract the sticky bias we added to get true count
+		if bestMaterial == activeMaterial then
+			newMaterialVotes = newMaterialVotes - HYSTERESIS.STICKY_BIAS
+		end
+
+		if newMaterialVotes >= HYSTERESIS.SWITCH_THRESHOLD then
+			activeMaterial = bestMaterial
+		end
+	elseif not activeMaterial and bestMaterial then
+		-- First material detection
+		activeMaterial = bestMaterial
+	end
+
+	return activeMaterial
 end
 
 local function getMovementSpeed(): number
@@ -245,6 +322,11 @@ local function onCharacterAdded(character: Model)
 		return
 	end
 
+	-- Reset material hysteresis state
+	materialHistory = {}
+	activeMaterial = nil
+	lastMaterial = nil
+
 	-- Disable default footsteps
 	task.wait(0.1) -- Wait for sounds to be added
 	disableDefaultFootsteps(character)
@@ -289,6 +371,10 @@ end
 
 function FootstepService:getLastMaterial(): Enum.Material?
 	return lastMaterial
+end
+
+function FootstepService:getActiveMaterial(): Enum.Material?
+	return activeMaterial
 end
 
 --------------------------------------------------------------------------------
