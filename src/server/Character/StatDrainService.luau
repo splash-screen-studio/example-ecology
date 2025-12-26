@@ -80,7 +80,11 @@ local function isPlayerInWater(player: Player): boolean
 		return false
 	end
 	local state = WaterController:getPlayerState(player)
-	return state ~= nil and (state.mode == "swimming" or state.mode == "wading")
+	local inWater = state ~= nil and (state.mode == "swimming" or state.mode == "wading")
+	if inWater then
+		print(string.format("[StatDrainService] %s is in water (mode: %s)", player.Name, state.mode))
+	end
+	return inWater
 end
 
 local function syncStatsToClient(player: Player)
@@ -156,6 +160,7 @@ local function restoreThirstInWater(player: Player)
 	if currentThirst < maxThirst then
 		local newThirst = math.min(maxThirst, currentThirst + WATER_CONFIG.thirstRestoreRate)
 		data.stats.thirst = newThirst
+		print(string.format("[StatDrainService] Restoring thirst for %s: %.1f -> %.1f", player.Name, currentThirst, newThirst))
 		syncStatsToClient(player)
 	end
 end

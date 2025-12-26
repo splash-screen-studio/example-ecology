@@ -230,6 +230,9 @@ local function updateSwimmingState(character: Model, state: PlayerWaterState)
 
 	if not inWater then
 		-- Not in water - ensure walking
+		if state.mode ~= "dry" then
+			print("[WaterController] Player exited water, mode -> dry")
+		end
 		state.mode = "dry"
 		humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming, false)
 		humanoid.WalkSpeed = 16
@@ -240,6 +243,7 @@ local function updateSwimmingState(character: Model, state: PlayerWaterState)
 	local waterDepthAtFeet = (surfaceY or 0) - feetY
 	local canTouchBottom = (pos.Y - (bottomY or 0)) < CONFIG.SWIM_DEPTH
 
+	local oldMode = state.mode
 	if waterDepthAtFeet < CONFIG.WADE_DEPTH and canTouchBottom then
 		-- Wading: shallow water, can walk
 		state.mode = "wading"
@@ -269,6 +273,11 @@ local function updateSwimmingState(character: Model, state: PlayerWaterState)
 			rootPart.CFrame = CFrame.new(pos.X, newY, pos.Z)
 				* CFrame.Angles(rootPart.CFrame:ToEulerAnglesYXZ())
 		end
+	end
+
+	-- Log mode changes
+	if oldMode ~= state.mode then
+		print(string.format("[WaterController] Mode changed: %s -> %s", oldMode, state.mode))
 	end
 end
 
