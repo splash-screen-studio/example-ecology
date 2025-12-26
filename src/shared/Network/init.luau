@@ -53,6 +53,9 @@ local EventDefinitions = {
 	{ name = "InventoryUpdate", type = "event" }, -- Server -> Client (inventory changed)
 	{ name = "UpdateSettings", type = "event" }, -- Client -> Server
 
+	-- Time
+	{ name = "TimeUpdate", type = "event" }, -- Server -> Client (time of day)
+
 	-- Teleport
 	{ name = "RequestTeleport", type = "event" },
 	{ name = "TeleportReady", type = "event" }, -- Server -> Client countdown

@@ -13,6 +13,7 @@ local HumanNPCService = require(script.NPC.HumanNPCService)
 local DiscoveryService = require(script.Discovery.DiscoveryService)
 local QuestService = require(script.Quest.QuestService)
 local DialogueService = require(script.Dialogue.DialogueService)
+local TimeService = require(script.Time.TimeService)
 
 -- Remove default Baseplate (we use generated terrain)
 local baseplate = workspace:FindFirstChild("Baseplate")
@@ -30,6 +31,7 @@ HumanNPCService:init()
 DiscoveryService:init()
 QuestService:init()
 DialogueService:init()
+TimeService:init()
 
 print("Server started:", PlaceConfig.getCurrent().name)
 
@@ -68,6 +70,7 @@ _G.HumanNPCService = HumanNPCService
 _G.DiscoveryService = DiscoveryService
 _G.QuestService = QuestService
 _G.DialogueService = DialogueService
+_G.TimeService = TimeService
 
 -- InventoryService is initialized by NetworkHandlers
 local InventoryService = require(script.Inventory.InventoryService)

@@ -15,6 +15,9 @@ local PlaceConfig = require(Shared.PlaceConfig)
 local AudioController = require(script.Audio)
 AudioController:init()
 
+local TimeController = require(script.Time)
+TimeController:init()
+
 local HUD = require(script.HUD)
 HUD:init()
 
@@ -22,4 +25,5 @@ print("Client started:", PlaceConfig.getCurrent().name)
 
 -- Export to _G for debugging
 _G.AudioController = AudioController
+_G.TimeController = TimeController
 _G.HUD = HUD
