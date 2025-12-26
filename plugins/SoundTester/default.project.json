@@ -1,0 +1,9 @@
+{
+  "name": "SoundTester",
+  "tree": {
+    "$className": "Folder",
+    "Main": {
+      "$path": "Main.server.luau"
+    }
+  }
+}
