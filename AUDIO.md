@@ -459,6 +459,31 @@ return SFXPlayer
 
 ### Footstep System
 
+**Architecture (SOLID/APIE)**:
+
+Our footstep system uses a provider pattern for flexibility:
+
+```
+src/client/Audio/Footsteps/
+├── init.luau              -- Controller (loads configured provider)
+├── FootstepTypes.luau     -- Interface contract
+├── RobloxFootstepProvider.luau  -- Default Roblox sounds (simple)
+└── CustomFootstepProvider.luau  -- Material-aware with hysteresis
+```
+
+**Providers**:
+- `roblox` (default): Uses Roblox's built-in footstep system. Simple, reliable.
+- `custom`: Material-aware with hysteresis algorithm to prevent sound thrashing.
+
+**Switching Providers**:
+```lua
+-- In Footsteps/init.luau, change DEFAULT_PROVIDER:
+local DEFAULT_PROVIDER = "roblox"  -- or "custom"
+
+-- Or switch at runtime:
+Footsteps:switchProvider("custom")
+```
+
 **Best Practices (2025)**:
 
 Based on community implementations like [Smile4's Material Footsteps](https://devforum.roblox.com/t/new-version-smile4s-material-footsteps-simple-customizable/2725074) and [Custom Walking Sounds](https://devforum.roblox.com/t/custom-walking-sounds-release/2289270):
@@ -468,50 +493,18 @@ Based on community implementations like [Smile4's Material Footsteps](https://de
 3. **Clone and destroy sounds** — Don't reuse sound instances; use `Debris:AddItem()` for cleanup
 4. **Don't interrupt sounds** — Let each footstep play to completion
 5. **Disable default sounds** — Mute `HumanoidRootPart.Running` to prevent doubling
+6. **Material hysteresis** — Sliding window voting prevents thrashing on terrain edges
 
+**Hysteresis Algorithm** (CustomFootstepProvider):
 ```lua
--- Recursive task.delay loop (recommended pattern)
-local function footstepLoop()
-    local humanoid = getHumanoid()
-    if not humanoid or humanoid.Health <= 0 then return end
-
-    local speed = getMovementSpeed() -- Horizontal velocity only
-
-    -- Dynamic delay: faster = shorter interval
-    local delay = math.clamp(
-        0.35 * (16 / speed),  -- Base delay * (max speed / current speed)
-        0.25,  -- Min delay (running)
-        0.6    -- Max delay (walking)
-    )
-
-    if speed > 8 and isGrounded() then
-        playFootstep(getGroundMaterial())
-    end
-
-    task.delay(delay, footstepLoop)
-end
-
--- Sound playback with auto-cleanup (no pooling!)
-local function playFootstep(material)
-    local sound = Instance.new("Sound")
-    sound.SoundId = getFootstepSound(material)
-    sound.Volume = 0.5
-    sound.PlaybackSpeed = 1 + (math.random() * 0.2 - 0.1)
-    sound.Parent = SoundService.FootstepSounds
-    sound:Play()
-
-    -- Auto-destroy after playing (don't cut off!)
-    Debris:AddItem(sound, sound.TimeLength + 0.2)
-end
-
--- Disable default Roblox footsteps
-local function disableDefaultFootsteps(character)
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
-    if rootPart then
-        local running = rootPart:FindFirstChild("Running")
-        if running then running.Volume = 0 end
-    end
-end
+-- Track last 5 material samples in sliding window
+-- Current material gets +1 "sticky" bias vote
+-- New material must appear 3+ times to trigger switch
+local HYSTERESIS = {
+    SAMPLE_COUNT = 5,
+    SWITCH_THRESHOLD = 3,
+    STICKY_BIAS = 1,
+}
 ```
 
 **Common Pitfalls**:
@@ -519,8 +512,9 @@ end
 - ❌ Stopping sounds when player stops (sounds cut off abruptly)
 - ❌ Sound pooling (adds complexity, causes issues)
 - ❌ Forgetting to disable default sounds (echo/doubling)
+- ❌ Instant material switching (causes thrashing on terrain boundaries)
 
-**Our Implementation**: `src/client/Audio/FootstepService.luau`
+**Our Implementation**: `src/client/Audio/Footsteps/`
 
 ---
 

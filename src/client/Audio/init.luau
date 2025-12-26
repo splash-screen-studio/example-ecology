@@ -20,7 +20,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Sub-services
 local AmbientService = require(script.AmbientService)
-local FootstepService = require(script.FootstepService)
+local Footsteps = require(script.Footsteps)
 local SFXService = require(script.SFXService)
 
 -- Shared config
@@ -51,7 +51,7 @@ function AudioController:setSFXVolume(volume: number)
 	if not settings then return end
 	settings.sfxVolume = math.clamp(volume, 0, 1)
 	SFXService:setVolume(settings.sfxVolume * settings.masterVolume)
-	FootstepService:setVolume(settings.sfxVolume * settings.masterVolume)
+	Footsteps:setVolume(settings.sfxVolume * settings.masterVolume)
 end
 
 function AudioController:setMusicVolume(volume: number)
@@ -77,7 +77,7 @@ function AudioController:_applySettings()
 
 	AmbientService:setVolume(settings.ambientVolume * master)
 	SFXService:setVolume(settings.sfxVolume * master)
-	FootstepService:setVolume(settings.sfxVolume * master)
+	Footsteps:setVolume(settings.sfxVolume * master)
 end
 
 function AudioController:getSettings()
@@ -129,7 +129,7 @@ end
 --------------------------------------------------------------------------------
 
 function AudioController:setFootstepsEnabled(enabled: boolean)
-	FootstepService:setEnabled(enabled)
+	Footsteps:setEnabled(enabled)
 end
 
 --------------------------------------------------------------------------------
@@ -140,8 +140,8 @@ function AudioController:getAmbientService()
 	return AmbientService
 end
 
-function AudioController:getFootstepService()
-	return FootstepService
+function AudioController:getFootsteps()
+	return Footsteps
 end
 
 function AudioController:getSFXService()
@@ -166,7 +166,7 @@ function AudioController:init()
 
 	-- Initialize sub-services
 	AmbientService:init()
-	FootstepService:init()
+	Footsteps:init() -- Uses configured provider (default: "roblox")
 	SFXService:init()
 
 	-- Apply initial settings
