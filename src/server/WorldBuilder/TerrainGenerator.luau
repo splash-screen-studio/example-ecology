@@ -203,15 +203,51 @@ function TerrainGenerator:generateWater(config: TerrainConfig)
 
 	print(string.format("[TerrainGenerator] Filling water to level %d", waterLevel))
 
-	-- Fill water in low areas
+	-- CRITICAL: First ensure solid floor exists under all water
+	-- This prevents swimming under terrain
+	print("[TerrainGenerator] Ensuring solid floor under water...")
+	local floorLevel = -30 -- Guaranteed floor level
+	local floorRegion = Region3.new(
+		Vector3.new(minX, floorLevel - 10, minZ),
+		Vector3.new(maxX, floorLevel, maxZ)
+	):ExpandToGrid(resolution)
+
+	terrain:FillRegion(floorRegion, resolution, Enum.Material.Rock)
+
+	-- Fill water above the floor, below water level
 	local waterRegion = Region3.new(
-		Vector3.new(minX, -50, minZ),
+		Vector3.new(minX, floorLevel, minZ),
 		Vector3.new(maxX, waterLevel, maxZ)
 	):ExpandToGrid(resolution)
 
 	terrain:FillRegion(waterRegion, resolution, Enum.Material.Water)
 
-	print("[TerrainGenerator] Water generation complete")
+	print("[TerrainGenerator] Water generation complete with guaranteed floor")
+end
+
+function TerrainGenerator:ensureSolidFloor(config: TerrainConfig)
+	--[[
+		Creates a guaranteed solid floor at the bottom of the world.
+		Call this before generating water to prevent swimming under terrain.
+	]]
+	local terrain = Workspace.Terrain
+	local resolution = DEFAULT_CONFIG.VOXEL_RESOLUTION
+
+	local minX = config.center.X - config.size.X / 2
+	local maxX = config.center.X + config.size.X / 2
+	local minZ = config.center.Z - config.size.Z / 2
+	local maxZ = config.center.Z + config.size.Z / 2
+
+	local floorLevel = -50
+	local floorThickness = 20
+
+	local floorRegion = Region3.new(
+		Vector3.new(minX - 20, floorLevel - floorThickness, minZ - 20),
+		Vector3.new(maxX + 20, floorLevel, maxZ + 20)
+	):ExpandToGrid(resolution)
+
+	terrain:FillRegion(floorRegion, resolution, Enum.Material.Basalt)
+	print("[TerrainGenerator] Solid floor created at Y=" .. floorLevel)
 end
 
 function TerrainGenerator:clear(config: TerrainConfig)
