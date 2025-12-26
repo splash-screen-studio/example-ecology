@@ -27,8 +27,10 @@ export type WorldConfig = {
 }
 
 -- Default configuration for Verdant Basin
+-- 500x500 studs provides good exploration space while maintaining performance
+-- for 20-50 animals, NPCs, and multiplayer
 local DEFAULT_CONFIG: WorldConfig = {
-	size = Vector3.new(400, 150, 400),
+	size = Vector3.new(500, 150, 500),
 	center = Vector3.zero,
 	waterLevel = 5,
 	seed = 42,
