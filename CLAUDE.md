@@ -26,7 +26,8 @@ An ecology simulation game. You are an Ecologist discovering what's wrong with i
 | [NPC_PEOPLE.md](./NPC_PEOPLE.md) | Human NPCs, dialogue, quests, relationships |
 | [AUDIO.md](./AUDIO.md) | Music, ambient, SFX, spatial audio, reverb |
 | [UI_HUD.md](./UI_HUD.md) | Mobile-first UI, HUD, status bars, minimap |
-| [GAMEPLAY_MECHANICS.md](./GAMEPLAY_MECHANICS.md) | Items, combat, survival, teleporting |
+| [GAMEPLAY_MECHANICS.md](./GAMEPLAY_MECHANICS.md) | Items, combat, survival, death/respawn, multiplayer |
+| [MONETIZATION.md](./MONETIZATION.md) | Ethical monetization, game passes, subscriptions |
 | [ENGINEERING.md](./ENGINEERING.md) | Git workflow, testing, CI/CD, code patterns |
 
 ---

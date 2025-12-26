@@ -773,6 +773,500 @@ src/
 
 ---
 
+## Death & Respawn System
+
+### Death Philosophy
+
+In an ecology simulation, death should feel meaningful but not punishing:
+- **Soft consequences**: Lose some resources, not all progress
+- **Educational moment**: Show what caused death (starvation, predator, fall)
+- **Quick return**: Minimize downtime, keep players engaged
+
+### Death Handler
+
+```lua
+-- src/server/DeathSystem.luau
+local DeathSystem = {}
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local RESPAWN_TIME = 5  -- seconds
+local RESOURCE_LOSS_PERCENT = 0.25  -- lose 25% of carried resources
+
+-- Track death causes for feedback
+export type DeathCause = "Starvation" | "Dehydration" | "Predator" | "Fall" | "Drowning" | "Environmental"
+
+local deathEvents = ReplicatedStorage:WaitForChild("Events"):WaitForChild("PlayerDied")
+
+function DeathSystem.onDeath(player: Player, cause: DeathCause, details: string?)
+    -- Record death cause for respawn screen
+    player:SetAttribute("LastDeathCause", cause)
+    player:SetAttribute("LastDeathDetails", details or "")
+
+    -- Apply resource penalty
+    local inventory = player:FindFirstChild("Inventory")
+    if inventory then
+        for _, item in inventory:GetChildren() do
+            if item:IsA("IntValue") then
+                local loss = math.floor(item.Value * RESOURCE_LOSS_PERCENT)
+                item.Value = math.max(0, item.Value - loss)
+            end
+        end
+    end
+
+    -- Notify client for death screen
+    deathEvents:FireClient(player, cause, details)
+
+    -- Auto-respawn after delay
+    task.delay(RESPAWN_TIME, function()
+        if player.Parent then
+            player:LoadCharacter()
+        end
+    end)
+end
+
+function DeathSystem.init()
+    Players.PlayerAdded:Connect(function(player)
+        player.CharacterAdded:Connect(function(character)
+            local humanoid = character:WaitForChild("Humanoid")
+
+            humanoid.Died:Connect(function()
+                -- Determine cause from last damage type
+                local cause = humanoid:GetAttribute("LastDamageType") or "Environmental"
+                local details = humanoid:GetAttribute("LastDamageSource")
+                DeathSystem.onDeath(player, cause, details)
+            end)
+        end)
+    end)
+end
+
+return DeathSystem
+```
+
+### Respawn Location Strategy
+
+```lua
+-- src/server/RespawnSystem.luau
+local RespawnSystem = {}
+
+local Players = game:GetService("Players")
+local CollectionService = game:GetService("CollectionService")
+
+-- Respawn at nearest safe point (tagged "SpawnPoint" in workspace)
+function RespawnSystem.getNearestSpawnPoint(deathPosition: Vector3): CFrame
+    local spawnPoints = CollectionService:GetTagged("SpawnPoint")
+    local nearest = nil
+    local nearestDist = math.huge
+
+    for _, spawn in spawnPoints do
+        local dist = (spawn.Position - deathPosition).Magnitude
+        if dist < nearestDist then
+            nearest = spawn
+            nearestDist = dist
+        end
+    end
+
+    if nearest then
+        return nearest.CFrame + Vector3.new(0, 3, 0)
+    end
+
+    -- Fallback to default spawn
+    return CFrame.new(0, 50, 0)
+end
+
+function RespawnSystem.init()
+    Players.PlayerAdded:Connect(function(player)
+        player.CharacterAdded:Connect(function(character)
+            -- Store position for respawn calculation
+            local rootPart = character:WaitForChild("HumanoidRootPart")
+            player:SetAttribute("LastSafePosition", rootPart.Position)
+        end)
+
+        -- Override spawn location
+        player.CharacterAdded:Connect(function(character)
+            local lastPos = player:GetAttribute("LastSafePosition")
+            if lastPos then
+                local spawnCF = RespawnSystem.getNearestSpawnPoint(lastPos)
+                character:PivotTo(spawnCF)
+            end
+        end)
+    end)
+end
+
+return RespawnSystem
+```
+
+### Client Death Screen
+
+```lua
+-- src/client/DeathScreen.luau
+local DeathScreen = {}
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local deathEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("PlayerDied")
+
+local deathMessages = {
+    Starvation = "You starved. Find food before your hunger depletes.",
+    Dehydration = "You died of thirst. Stay near water sources.",
+    Predator = "A predator got you. Watch for warning signs.",
+    Fall = "You fell too far. Be careful on high terrain.",
+    Drowning = "You drowned. Don't swim too deep without air.",
+    Environmental = "The environment overcame you.",
+}
+
+function DeathScreen.show(cause: string, details: string?)
+    local gui = player.PlayerGui:WaitForChild("DeathGui")
+    local frame = gui:WaitForChild("DeathFrame")
+    local messageLabel = frame:WaitForChild("Message")
+    local tipLabel = frame:WaitForChild("Tip")
+
+    messageLabel.Text = "You Died"
+    tipLabel.Text = deathMessages[cause] or deathMessages.Environmental
+
+    if details and details ~= "" then
+        tipLabel.Text = tipLabel.Text .. "\n" .. details
+    end
+
+    -- Fade in
+    frame.BackgroundTransparency = 1
+    frame.Visible = true
+    TweenService:Create(frame, TweenInfo.new(0.5), {
+        BackgroundTransparency = 0.3
+    }):Play()
+
+    -- Auto-hide on respawn
+    player.CharacterAdded:Once(function()
+        TweenService:Create(frame, TweenInfo.new(0.3), {
+            BackgroundTransparency = 1
+        }):Play()
+        task.delay(0.3, function()
+            frame.Visible = false
+        end)
+    end)
+end
+
+function DeathScreen.init()
+    deathEvent.OnClientEvent:Connect(DeathScreen.show)
+end
+
+return DeathScreen
+```
+
+---
+
+## Multiplayer Systems
+
+### Player Synchronization
+
+In a multiplayer ecology simulation, players share the world state:
+
+```lua
+-- src/server/MultiplayerSync.luau
+local MultiplayerSync = {}
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Shared world state (all players see same ecosystem)
+local worldState = ReplicatedStorage:WaitForChild("WorldState")
+
+function MultiplayerSync.updateEcosystemHealth(region: string, health: number)
+    local regionFolder = worldState:FindFirstChild(region)
+    if regionFolder then
+        regionFolder:SetAttribute("Health", health)
+        -- All clients automatically see this via replication
+    end
+end
+
+function MultiplayerSync.broadcastPlayerAction(player: Player, action: string, data: any)
+    -- Notify nearby players of significant actions
+    local actionEvent = ReplicatedStorage.Events.PlayerAction
+
+    for _, otherPlayer in Players:GetPlayers() do
+        if otherPlayer ~= player then
+            local distance = getPlayerDistance(player, otherPlayer)
+            if distance < 100 then  -- Only nearby players
+                actionEvent:FireClient(otherPlayer, player.Name, action, data)
+            end
+        end
+    end
+end
+
+return MultiplayerSync
+```
+
+### Group Teleporting
+
+Players can travel together between places:
+
+```lua
+-- src/server/GroupTeleport.luau
+local GroupTeleport = {}
+
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local PlaceConfig = require(ReplicatedStorage.Shared.PlaceConfig)
+
+local MAX_GROUP_SIZE = 8
+local pendingGroups = {}  -- leader -> {members}
+
+function GroupTeleport.createGroup(leader: Player)
+    pendingGroups[leader] = {leader}
+    return true
+end
+
+function GroupTeleport.joinGroup(leader: Player, member: Player): boolean
+    local group = pendingGroups[leader]
+    if not group then return false end
+    if #group >= MAX_GROUP_SIZE then return false end
+
+    table.insert(group, member)
+    return true
+end
+
+function GroupTeleport.leaveGroup(leader: Player, member: Player)
+    local group = pendingGroups[leader]
+    if not group then return end
+
+    for i, p in group do
+        if p == member then
+            table.remove(group, i)
+            break
+        end
+    end
+end
+
+function GroupTeleport.teleportGroup(leader: Player, placeName: string)
+    local group = pendingGroups[leader]
+    if not group or #group == 0 then return end
+
+    local placeId = PlaceConfig.PlaceIds[placeName]
+    if not placeId then
+        warn("Unknown place:", placeName)
+        return
+    end
+
+    -- Create teleport options with reserved server for group
+    local options = Instance.new("TeleportOptions")
+    options.ShouldReserveServer = (#group > 1)  -- Private server for groups
+
+    local success, result = pcall(function()
+        return TeleportService:TeleportAsync(placeId, group, options)
+    end)
+
+    if success then
+        pendingGroups[leader] = nil
+    else
+        warn("Group teleport failed:", result)
+        -- Notify group members
+        for _, member in group do
+            -- Fire failure event
+        end
+    end
+end
+
+-- Handle teleport arrival (receiving side)
+function GroupTeleport.onTeleportArrival()
+    local teleportData = TeleportService:GetLocalPlayerTeleportData()
+    if teleportData and teleportData.groupLeader then
+        -- Spawn near group leader
+    end
+end
+
+return GroupTeleport
+```
+
+### Cooperative Actions
+
+Players can work together on ecology tasks:
+
+```lua
+-- src/server/CoopActions.luau
+local CoopActions = {}
+
+local Players = game:GetService("Players")
+
+-- Multi-player actions that scale with participants
+local coopTasks = {
+    PlantTree = {
+        minPlayers = 1,
+        maxPlayers = 4,
+        baseTime = 10,  -- seconds
+        timePerPlayer = -2,  -- faster with more players
+        minTime = 3,
+    },
+    CleanPollution = {
+        minPlayers = 1,
+        maxPlayers = 6,
+        baseTime = 30,
+        timePerPlayer = -4,
+        minTime = 8,
+    },
+    BuildNest = {
+        minPlayers = 2,  -- requires cooperation
+        maxPlayers = 3,
+        baseTime = 15,
+        timePerPlayer = -3,
+        minTime = 6,
+    },
+}
+
+local activeCoopTasks = {}  -- taskId -> {participants, startTime, taskType}
+
+function CoopActions.startTask(initiator: Player, taskType: string, position: Vector3): string?
+    local config = coopTasks[taskType]
+    if not config then return nil end
+
+    local taskId = initiator.UserId .. "_" .. tick()
+    activeCoopTasks[taskId] = {
+        participants = {initiator},
+        position = position,
+        taskType = taskType,
+        startTime = tick(),
+    }
+
+    return taskId
+end
+
+function CoopActions.joinTask(player: Player, taskId: string): boolean
+    local task = activeCoopTasks[taskId]
+    if not task then return false end
+
+    local config = coopTasks[task.taskType]
+    if #task.participants >= config.maxPlayers then return false end
+
+    -- Check player is near the task
+    local char = player.Character
+    if not char then return false end
+    local dist = (char.PrimaryPart.Position - task.position).Magnitude
+    if dist > 15 then return false end
+
+    table.insert(task.participants, player)
+    return true
+end
+
+function CoopActions.getTaskDuration(taskId: string): number
+    local task = activeCoopTasks[taskId]
+    if not task then return 0 end
+
+    local config = coopTasks[task.taskType]
+    local participantCount = #task.participants
+    local duration = config.baseTime + (participantCount * config.timePerPlayer)
+    return math.max(config.minTime, duration)
+end
+
+function CoopActions.completeTask(taskId: string)
+    local task = activeCoopTasks[taskId]
+    if not task then return end
+
+    -- Reward all participants
+    for _, player in task.participants do
+        -- Grant XP, items, etc.
+    end
+
+    activeCoopTasks[taskId] = nil
+end
+
+return CoopActions
+```
+
+### Player Proximity Chat Zones
+
+```lua
+-- src/server/ProximityChat.luau
+local ProximityChat = {}
+
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+
+local WHISPER_RANGE = 15
+local NORMAL_RANGE = 50
+local SHOUT_RANGE = 150
+
+function ProximityChat.init()
+    -- Configure proximity-based chat
+    local channel = TextChatService:FindFirstChild("RBXGeneral")
+    if channel then
+        channel.OnIncomingMessage = function(message)
+            return ProximityChat.filterByDistance(message)
+        end
+    end
+end
+
+function ProximityChat.filterByDistance(message)
+    local sender = Players:FindFirstChild(message.TextSource.Name)
+    if not sender or not sender.Character then return message end
+
+    local senderPos = sender.Character.PrimaryPart.Position
+    local properties = Instance.new("TextChatMessageProperties")
+
+    -- Determine range based on prefix
+    local range = NORMAL_RANGE
+    if message.Text:sub(1, 1) == "!" then
+        range = SHOUT_RANGE
+    elseif message.Text:sub(1, 1) == "~" then
+        range = WHISPER_RANGE
+    end
+
+    -- Only visible to players in range
+    -- (Actual filtering happens via TextChatService configuration)
+
+    return properties
+end
+
+return ProximityChat
+```
+
+### Server Instance Management
+
+```lua
+-- src/server/ServerManager.luau
+local ServerManager = {}
+
+local Players = game:GetService("Players")
+local MessagingService = game:GetService("MessagingService")
+
+local MAX_PLAYERS_PER_SERVER = 20
+local MERGE_THRESHOLD = 5  -- Merge servers below this count
+
+function ServerManager.init()
+    -- Monitor player count
+    Players.PlayerRemoving:Connect(function()
+        task.wait(1)
+        if #Players:GetPlayers() < MERGE_THRESHOLD then
+            ServerManager.attemptMerge()
+        end
+    end)
+end
+
+function ServerManager.attemptMerge()
+    -- Request merge with another low-population server
+    -- Uses MessagingService for cross-server communication
+    pcall(function()
+        MessagingService:PublishAsync("ServerMerge", {
+            serverId = game.JobId,
+            playerCount = #Players:GetPlayers(),
+            placeId = game.PlaceId,
+        })
+    end)
+end
+
+function ServerManager.getServerPopulation(): number
+    return #Players:GetPlayers()
+end
+
+return ServerManager
+```
+
+---
+
 ## Sources
 
 - [Pickup System Documentation](https://create.roblox.com/docs/resources/battle-royale/pickup-system)
