@@ -149,8 +149,11 @@ function PlaceConfig.applyLighting()
 	local config = PlaceConfig.getCurrent()
 	local lighting = game:GetService("Lighting")
 
+	-- Only apply base lighting properties, skip nested presets (day/night/dawn/dusk)
 	for property, value in config.lighting do
-		lighting[property] = value
+		if type(value) ~= "table" then
+			lighting[property] = value
+		end
 	end
 end
 
