@@ -32,4 +32,9 @@ _G.WorldBuilder = WorldBuilder
 _G.WaterController = WaterController
 _G.PlayerDataService = PlayerDataService
 _G.EcologyService = EcologyService
-print("WorldBuilder, WaterController, PlayerDataService, EcologyService available via _G")
+
+-- InventoryService is initialized by NetworkHandlers
+local InventoryService = require(script.Inventory.InventoryService)
+_G.InventoryService = InventoryService
+
+print("WorldBuilder, WaterController, PlayerDataService, EcologyService, InventoryService available via _G")

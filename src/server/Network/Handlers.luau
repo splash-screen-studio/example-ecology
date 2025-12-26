@@ -20,6 +20,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Network: any
 local PlayerDataService: any
 local EcologyService: any
+local InventoryService: any
 local RateLimiter: any
 local Validators: any
 
@@ -56,21 +57,21 @@ local function handleUseItem(player: Player, data: any)
 		return { success = false, error = "Invalid request" }
 	end
 
-	local playerData = PlayerDataService:getData(player)
-	if not playerData then
-		return { success = false, error = "Data not loaded" }
+	-- Use InventoryService for item usage
+	local result = InventoryService:useItem(player, cleanData.itemId, cleanData.targetId)
+
+	if result.success then
+		print(string.format("[Handlers] %s used item: %s", player.Name, cleanData.itemId))
 	end
 
-	-- Check if player has item
-	if not PlayerDataService:hasItem(player, cleanData.itemId) then
-		return { success = false, error = "Item not found" }
-	end
-
-	-- TODO: Implement item usage logic based on item type
-	-- For now, just acknowledge the request
-	print(string.format("[Handlers] %s used item: %s", player.Name, cleanData.itemId))
-
-	return { success = true, data = { consumed = false, effectApplied = nil } }
+	return {
+		success = result.success,
+		data = {
+			consumed = result.success,
+			message = result.message,
+		},
+		error = if not result.success then result.message else nil,
+	}
 end
 
 local function handleDropItem(player: Player, data: any)
@@ -79,10 +80,9 @@ local function handleDropItem(player: Player, data: any)
 		return
 	end
 
-	local removed = PlayerDataService:removeItem(player, cleanData.itemId, cleanData.quantity)
-	if removed then
+	local dropped = InventoryService:dropItem(player, cleanData.itemId, cleanData.quantity)
+	if dropped then
 		print(string.format("[Handlers] %s dropped %dx %s", player.Name, cleanData.quantity, cleanData.itemId))
-		-- TODO: Spawn item in world at player position
 	end
 end
 
@@ -92,10 +92,11 @@ local function handlePickupItem(player: Player, data: any)
 		return
 	end
 
-	-- TODO: Validate object exists and is near player
-	-- TODO: Add item to inventory
-	-- TODO: Remove object from world
-	print(string.format("[Handlers] %s picked up: %s", player.Name, cleanData.objectId))
+	-- Use InventoryService for pickup
+	local success = InventoryService:pickupItem(player, cleanData.objectId)
+	if success then
+		print(string.format("[Handlers] %s picked up: %s", player.Name, cleanData.objectId))
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -304,8 +305,12 @@ function Handlers:init()
 	Network = require(ReplicatedStorage.Shared.Network)
 	PlayerDataService = require(script.Parent.Parent.Data.PlayerDataService)
 	EcologyService = require(script.Parent.Parent.Ecology.EcologyService)
+	InventoryService = require(script.Parent.Parent.Inventory.InventoryService)
 	RateLimiter = require(script.Parent.RateLimiter)
 	Validators = require(script.Parent.Validators)
+
+	-- Initialize InventoryService
+	InventoryService:init()
 
 	-- Initialize network (creates remotes)
 	Network.init()
