@@ -91,6 +91,7 @@ local DEFINITIONS: { DiscoveryDefinition } = {
 
 	-- ============================================================
 	-- LOCATIONS (2 examples)
+	-- World is 500x500 centered at origin, so X/Z range from -250 to 250
 	-- ============================================================
 	{
 		id = "location_ancient_oak",
@@ -100,7 +101,7 @@ local DEFINITIONS: { DiscoveryDefinition } = {
 		discoverMethod = "proximity",
 		rarity = "uncommon",
 		biomes = { "verdant_basin" },
-		position = Vector3.new(100, 20, 100), -- Placeholder position
+		position = Vector3.new(120, 25, 80), -- Northeast quadrant, on higher ground
 		radius = 30,
 		experienceReward = 20,
 	},
@@ -112,8 +113,8 @@ local DEFINITIONS: { DiscoveryDefinition } = {
 		discoverMethod = "proximity",
 		rarity = "rare",
 		biomes = { "verdant_basin" },
-		position = Vector3.new(-50, 15, 75), -- Placeholder position
-		radius = 20,
+		position = Vector3.new(60, 15, -40), -- East of spawn, in a low wetland area
+		radius = 25,
 		experienceReward = 35,
 	},
 

@@ -95,6 +95,9 @@ local function triggerDeath(player: Player, reason: string)
 
 	print(string.format("[StatDrainService] %s died: %s", player.Name, reason))
 
+	-- Set death reason attribute for client death screen
+	character:SetAttribute("DeathReason", reason)
+
 	-- Kill the player
 	humanoid.Health = 0
 

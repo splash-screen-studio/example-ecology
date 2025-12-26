@@ -9,6 +9,7 @@ local EcologyService = require(script.Ecology.EcologyService)
 local InteractionService = require(script.Interaction.InteractionService)
 local WorldObjectService = require(script.WorldObjects.WorldObjectService)
 local NPCService = require(script.NPC.NPCService)
+local HumanNPCService = require(script.NPC.HumanNPCService)
 local DiscoveryService = require(script.Discovery.DiscoveryService)
 local QuestService = require(script.Quest.QuestService)
 local DialogueService = require(script.Dialogue.DialogueService)
@@ -25,6 +26,7 @@ PlayerDataService:init()
 NetworkHandlers:init()
 EcologyService:init()
 NPCService:init()
+HumanNPCService:init()
 DiscoveryService:init()
 QuestService:init()
 DialogueService:init()
@@ -61,6 +63,7 @@ _G.EcologyService = EcologyService
 _G.InteractionService = InteractionService
 _G.WorldObjectService = WorldObjectService
 _G.NPCService = NPCService
+_G.HumanNPCService = HumanNPCService
 _G.DiscoveryService = DiscoveryService
 _G.QuestService = QuestService
 _G.DialogueService = DialogueService

@@ -21,6 +21,7 @@ local StatsBar = require(script.Components.StatsBar)
 local InventoryHotbar = require(script.Components.InventoryHotbar)
 local InteractionPrompt = require(script.Components.InteractionPrompt)
 local NotificationToast = require(script.Components.NotificationToast)
+local DeathScreen = require(script.Components.DeathScreen)
 
 -- Dependencies (lazy loaded)
 local Network
@@ -35,6 +36,7 @@ local statsWidget: StatsBar.StatsBarWidget?
 local hotbarWidget: InventoryHotbar.HotbarWidget?
 local interactionWidget: InteractionPrompt.PromptWidget?
 local toastWidget: NotificationToast.ToastWidget?
+local deathWidget: DeathScreen.DeathScreenWidget?
 
 -- Connection tracking
 local connections: { RBXScriptConnection } = {}
@@ -143,6 +145,9 @@ function HUD:init()
 	-- Create notification toast (top-right popups)
 	toastWidget = NotificationToast.create(screenGui)
 
+	-- Create death screen overlay
+	deathWidget = DeathScreen.create(screenGui)
+
 	-- Setup hotbar item use callback
 	hotbarWidget.onUseItem = function(item: InventoryHotbar.InventoryItem)
 		loadDependencies()
@@ -153,6 +158,38 @@ function HUD:init()
 
 	-- Setup network listeners
 	setupNetworkListeners()
+
+	-- Setup death/respawn handling
+	local function onCharacterDied(character: Model)
+		if deathWidget then
+			-- Try to get death reason from attributes (set by StatDrainService)
+			local deathReason = character:GetAttribute("DeathReason") or nil
+			deathWidget:show(deathReason)
+		end
+	end
+
+	local function onCharacterAdded(character: Model)
+		-- Hide death screen when new character spawns
+		if deathWidget then
+			deathWidget:hide()
+		end
+
+		-- Listen for death
+		local humanoid = character:WaitForChild("Humanoid", 10) :: Humanoid?
+		if humanoid then
+			local diedConn = humanoid.Died:Connect(function()
+				onCharacterDied(character)
+			end)
+			table.insert(connections, diedConn)
+		end
+	end
+
+	-- Connect to current and future characters
+	if player.Character then
+		onCharacterAdded(player.Character)
+	end
+	local charAddedConn = player.CharacterAdded:Connect(onCharacterAdded)
+	table.insert(connections, charAddedConn)
 
 	-- Initialize with default values
 	statsWidget:update("hunger", 100, 100)
@@ -187,6 +224,11 @@ function HUD:destroy()
 	if toastWidget then
 		toastWidget:destroy()
 		toastWidget = nil
+	end
+
+	if deathWidget then
+		deathWidget:destroy()
+		deathWidget = nil
 	end
 
 	-- Destroy GUI

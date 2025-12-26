@@ -51,6 +51,7 @@ An ecology simulation game. You are an Ecologist discovering what's wrong with i
 | `Character/WaterController` | Prevent swimming under terrain | Auto-initializes |
 | `Character/SpawnService` | Safe player spawning | `:findSafeSpawn()`, `:teleportToSafePosition()` |
 | `Character/StatDrainService` | Hunger/thirst drain, death | `:init()`, `:forceDrain()`, `:pauseDrain()` |
+| `NPC/HumanNPCService` | Human NPC spawning | `:spawnNPC()`, `:spawnAllForPlace()` |
 | `Interaction/InteractionService` | Player-world interactions | `:interact()`, `:registerInteractable()` |
 | `WorldObjects/WorldObjectService` | Spawn/manage world objects | `:spawnForCurrentPlace()`, `:spawnObject()` |
 | `WorldObjects/ObjectDefinitions` | 12 object types | `.get()`, `.getByBiome()` |
@@ -74,6 +75,7 @@ An ecology simulation game. You are an Ecologist discovering what's wrong with i
 | `HUD/Components/InventoryHotbar` | 5-slot item hotbar | `.create()`, `:setItems()` |
 | `HUD/Components/InteractionPrompt` | Proximity interaction UI | `.create()`, E key / tap |
 | `HUD/Components/NotificationToast` | Discovery/quest popups | `.create()`, `:show()` |
+| `HUD/Components/DeathScreen` | Death overlay, respawn countdown | `.create()`, `:show()` |
 
 ### Shared (`src/shared/`)
 | Module | Purpose |
@@ -334,6 +336,10 @@ git push -u origin feature/my-feature
 | 23 | Day/Night Cycle | Open |
 
 ### Recently Completed
+- #29 Discovery Locations - Real positions for proximity discoveries
+- #28 Death/Respawn Flow - Death screen, respawn countdown
+- #27 Quest-Inventory Integration - Collection quests track items
+- #26 Human NPC Spawning - Quest givers in the world
 - #25 Stat Drain - Hunger/thirst decrease over time, death trigger
 - #21 NPC Dialogue - Branching dialogue trees, quest integration
 - #20 Discovery System - Species, flora, locations, lore tracking

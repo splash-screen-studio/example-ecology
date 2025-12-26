@@ -24,6 +24,7 @@ local ItemDefinitions: any
 local PlayerDataService: any
 local EcologyService: any
 local Network: any
+local QuestService: any
 
 -- Configuration
 local CONFIG = {
@@ -129,6 +130,11 @@ function InventoryService:addItem(player: Player, itemId: string, quantity: numb
 	-- Notify client of full inventory update
 	if Network then
 		Network.Events.InventoryUpdate:FireClient(player, inventory.items)
+	end
+
+	-- Notify QuestService for collection quests
+	if QuestService then
+		QuestService:onItemCollected(player, itemId, quantity)
 	end
 
 	return true
@@ -388,6 +394,10 @@ function InventoryService:init()
 
 	pcall(function()
 		Network = require(ReplicatedStorage.Shared.Network)
+	end)
+
+	pcall(function()
+		QuestService = require(ServerScriptService.Server.Quest.QuestService)
 	end)
 
 	-- Clean up cooldowns when players leave
