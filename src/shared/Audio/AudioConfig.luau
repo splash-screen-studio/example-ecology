@@ -27,7 +27,7 @@ AudioConfig.DefaultSettings = {
 -- AMBIENT ZONES
 --------------------------------------------------------------------------------
 
-AudioConfig.AmbientZones: { [string]: Types.AmbientZone } = {
+AudioConfig.AmbientZones = {
 	wetland = {
 		id = "wetland",
 		name = "Wetland Ambience",
@@ -154,7 +154,7 @@ AudioConfig.AmbientZones: { [string]: Types.AmbientZone } = {
 -- FOOTSTEP MATERIALS
 --------------------------------------------------------------------------------
 
-AudioConfig.FootstepMaterials: { Types.FootstepMaterial } = {
+AudioConfig.FootstepMaterials = {
 	{
 		material = Enum.Material.Grass,
 		sounds = { "rbxassetid://0", "rbxassetid://0", "rbxassetid://0" },
@@ -209,7 +209,7 @@ AudioConfig.FootstepMaterials: { Types.FootstepMaterial } = {
 -- SOUND EFFECTS
 --------------------------------------------------------------------------------
 
-AudioConfig.SoundEffects: { [string]: Types.SoundEffect } = {
+AudioConfig.SoundEffects = {
 	-- UI Sounds
 	ui_click = {
 		id = "ui_click",
@@ -331,7 +331,7 @@ AudioConfig.SoundEffects: { [string]: Types.SoundEffect } = {
 -- MUSIC TRACKS
 --------------------------------------------------------------------------------
 
-AudioConfig.MusicTracks: { [string]: Types.MusicTrack } = {
+AudioConfig.MusicTracks = {
 	wetland_day = {
 		id = "wetland_day",
 		soundId = "rbxassetid://0",
@@ -391,7 +391,7 @@ AudioConfig.MusicTracks: { [string]: Types.MusicTrack } = {
 -- NPC SOUNDS
 --------------------------------------------------------------------------------
 
-AudioConfig.NPCSounds: { [string]: { [string]: { string } } } = {
+AudioConfig.NPCSounds = {
 	marsh_rabbit = {
 		idle = { "rbxassetid://0" },
 		alert = { "rbxassetid://0" },

@@ -27,16 +27,19 @@ local CONFIG = {
 -- Cache
 local modelCache: { [string]: Model } = {}
 local assetsFolder: Folder? = nil
+local assetsFolderChecked = false
+local assetsFolderWarned = false
 
 --------------------------------------------------------------------------------
 -- INITIALIZATION
 --------------------------------------------------------------------------------
 
 local function getAssetsFolder(): Folder?
-	if assetsFolder then
+	if assetsFolderChecked then
 		return assetsFolder
 	end
 
+	assetsFolderChecked = true
 	assetsFolder = ReplicatedStorage:FindFirstChild(CONFIG.ASSETS_PATH) :: Folder?
 	return assetsFolder
 end
@@ -48,7 +51,10 @@ end
 local function resolvePath(category: string, modelId: string): Model?
 	local assets = getAssetsFolder()
 	if not assets then
-		warn("[ModelLoader] Assets folder not found:", CONFIG.ASSETS_PATH)
+		if not assetsFolderWarned then
+			assetsFolderWarned = true
+			warn("[ModelLoader] Assets folder not found:", CONFIG.ASSETS_PATH, "- using placeholder models")
+		end
 		return nil
 	end
 
@@ -112,7 +118,6 @@ end
 function ModelLoader:cloneModel(category: string, modelId: string): Model?
 	local model = self:getModel(category, modelId)
 	if not model then
-		warn("[ModelLoader] Model not found:", category, modelId)
 		return nil
 	end
 
