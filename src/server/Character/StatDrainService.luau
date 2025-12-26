@@ -20,6 +20,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Dependencies (lazy loaded)
 local PlayerDataService
 local SpawnService
+local WaterController
 local Network
 
 -- Configuration: Two stats to find common patterns
@@ -34,6 +35,12 @@ local DRAIN_CONFIG = {
 		interval = 15,
 		deathMessage = "You died of thirst!",
 	},
+}
+
+-- Water restoration config
+local WATER_CONFIG = {
+	thirstRestoreRate = 3, -- Amount to restore per interval while in water
+	restoreInterval = 5, -- Seconds between restoration ticks
 }
 
 local CONFIG = {

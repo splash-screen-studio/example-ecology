@@ -135,9 +135,9 @@ local function detectWaterAtPosition(x: number, y: number, z: number): (boolean,
 
 		if testSuccess and testMaterials then
 			local foundWater = false
-			for _, xM in testMaterials do
-				for _, yM in xM do
-					for _, mat in yM do
+			for _, xM in ipairs(testMaterials) do
+				for _, yM in ipairs(xM) do
+					for _, mat in ipairs(yM) do
 						if mat == Enum.Material.Water then
 							foundWater = true
 							break
