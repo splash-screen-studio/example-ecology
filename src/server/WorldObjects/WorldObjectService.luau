@@ -124,7 +124,25 @@ local function createPlaceholderModel(definition: any): Model
 	part.Material = Enum.Material.Grass
 	part.BrickColor = BrickColor.new("Bright green")
 
-	if definition.category == "resource" then
+	-- Set appearance based on object type
+	local id = definition.id or ""
+	if string.find(id, "stone") or string.find(id, "rock") then
+		part.BrickColor = BrickColor.new("Medium stone grey")
+		part.Material = Enum.Material.Slate
+		part.Size = Vector3.new(1.5, 1, 1.5)
+	elseif string.find(id, "berry") or string.find(id, "fruit") then
+		part.BrickColor = BrickColor.new("Bright red")
+		part.Material = Enum.Material.SmoothPlastic
+		part.Size = Vector3.new(0.8, 0.8, 0.8)
+	elseif string.find(id, "grass") or string.find(id, "plant") or string.find(id, "herb") then
+		part.BrickColor = BrickColor.new("Bright green")
+		part.Material = Enum.Material.Grass
+		part.Size = Vector3.new(1, 1.5, 1)
+	elseif string.find(id, "wood") or string.find(id, "stick") or string.find(id, "log") then
+		part.BrickColor = BrickColor.new("Brown")
+		part.Material = Enum.Material.Wood
+		part.Size = Vector3.new(2, 1, 1)
+	elseif definition.category == "resource" then
 		part.BrickColor = BrickColor.new("Brown")
 		part.Material = Enum.Material.Wood
 	elseif definition.category == "collectible" then
