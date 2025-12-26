@@ -16,12 +16,23 @@
 local TerrainGenerator = {}
 
 -- Types
+export type MaterialConfig = {
+	primary: Enum.Material,
+	secondary: Enum.Material,
+	dry: Enum.Material,
+	shore: Enum.Material,
+	underwater: Enum.Material,
+	grassChance: number,
+}
+
 export type TerrainConfig = {
 	center: Vector3,
 	size: Vector3,
 	baseHeight: number?,
 	waterLevel: number?,
 	seed: number?,
+	materials: MaterialConfig?,
+	biome: string?,
 }
 
 -- Configuration
@@ -103,44 +114,60 @@ local function selectMaterial(x: number, z: number, height: number, config: Terr
 	local slope = calculateSlope(x, z, config)
 	local seed = config.seed or DEFAULT_CONFIG.SEED
 
-	-- Steep slopes get rock
+	-- Get biome-specific materials (with wetland defaults)
+	local mats = config.materials or {
+		primary = Enum.Material.Grass,
+		secondary = Enum.Material.LeafyGrass,
+		dry = Enum.Material.Ground,
+		shore = Enum.Material.Mud,
+		underwater = Enum.Material.Mud,
+		grassChance = 0.7,
+	}
+
+	-- Steep slopes get rock regardless of biome
 	if slope > 0.8 then
 		return Enum.Material.Rock
 	end
 
 	if slope > 0.5 then
-		-- Mix of rock and ground
+		-- Mix of rock and dry material
 		local rockChance = math.noise(x * 0.1 + seed, z * 0.1 + seed)
 		if rockChance > 0.3 then
 			return Enum.Material.Rock
 		end
-		return Enum.Material.Ground
+		return mats.dry
 	end
 
-	-- Below or near water level
+	-- Below water level
 	if height < waterLevel - 2 then
-		return Enum.Material.Mud
+		return mats.underwater
 	end
 
+	-- Shoreline zone
 	if height < waterLevel + 3 then
-		-- Shoreline / marsh
-		local marshNoise = math.noise(x * 0.08 + seed, z * 0.08 + seed)
-		if marshNoise > 0 then
-			return Enum.Material.Sand
+		local shoreNoise = math.noise(x * 0.08 + seed, z * 0.08 + seed)
+		if shoreNoise > 0 then
+			return mats.shore
 		end
-		return Enum.Material.Mud
+		return mats.underwater
 	end
 
-	-- Above water - vegetation zones
+	-- Above water - use biome-specific vegetation logic
 	local vegetationNoise = math.noise(x * 0.03 + seed * 5, z * 0.03 + seed * 5)
 
-	if vegetationNoise > 0.4 then
-		-- Dense vegetation
-		return Enum.Material.LeafyGrass
-	elseif vegetationNoise > 0 then
-		return Enum.Material.Grass
+	-- Normalize noise from [-1, 1] to [0, 1]
+	local normalizedNoise = (vegetationNoise + 1) / 2
+
+	if normalizedNoise < mats.grassChance then
+		-- Vegetation zone
+		if normalizedNoise < mats.grassChance * 0.5 then
+			return mats.secondary -- Dense/lush
+		else
+			return mats.primary -- Normal
+		end
 	else
-		return Enum.Material.Ground
+		-- Dry/barren zone
+		return mats.dry
 	end
 end
 

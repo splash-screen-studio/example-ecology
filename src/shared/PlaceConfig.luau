@@ -15,6 +15,7 @@ local WorldDimensions = {
 local Configs = {
 	[PlaceIds.VerdantBasin] = {
 		name = "Verdant Basin",
+		biome = "wetland",
 		lighting = {
 			Ambient = Color3.fromRGB(38, 46, 31),
 			Brightness = 2,
@@ -27,9 +28,19 @@ local Configs = {
 			seed = 42,
 			waterCoverage = 0.30, -- Target 30% water
 		},
+		-- Lush wetland materials
+		materials = {
+			primary = Enum.Material.Grass,
+			secondary = Enum.Material.LeafyGrass,
+			dry = Enum.Material.Ground,
+			shore = Enum.Material.Mud,
+			underwater = Enum.Material.Mud,
+			grassChance = 0.7, -- 70% grass coverage
+		},
 	},
 	[PlaceIds.Driftplain] = {
 		name = "Driftplain",
+		biome = "plains",
 		lighting = {
 			Ambient = Color3.fromRGB(64, 56, 46),
 			Brightness = 3,
@@ -41,6 +52,15 @@ local Configs = {
 			baseHeight = 10,
 			seed = 99,
 			waterCoverage = 0.05, -- Target 5% water (oases only)
+		},
+		-- Arid plains materials
+		materials = {
+			primary = Enum.Material.Sand,
+			secondary = Enum.Material.Ground,
+			dry = Enum.Material.Sandstone,
+			shore = Enum.Material.Sand,
+			underwater = Enum.Material.Sand,
+			grassChance = 0.15, -- Only 15% sparse grass patches
 		},
 	},
 }
@@ -63,7 +83,13 @@ function PlaceConfig.getTerrainConfig()
 		waterLevel = current.terrain.waterLevel,
 		baseHeight = current.terrain.baseHeight,
 		seed = current.terrain.seed,
+		materials = current.materials,
+		biome = current.biome,
 	}
+end
+
+function PlaceConfig.getMaterials()
+	return PlaceConfig.getCurrent().materials
 end
 
 function PlaceConfig.applyLighting()
