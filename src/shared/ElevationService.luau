@@ -199,10 +199,10 @@ local function detectTerrainWater(x: number, z: number, searchY: number): boolea
 		return false
 	end
 
-	-- Check if any voxel is water
-	for _, xMats in materials do
-		for _, yMats in xMats do
-			for _, material in yMats do
+	-- Check if any voxel is water (use ipairs for 3D array from ReadVoxels)
+	for _, xMats in ipairs(materials) do
+		for _, yMats in ipairs(xMats) do
+			for _, material in ipairs(yMats) do
 				if material == Enum.Material.Water then
 					return true
 				end
