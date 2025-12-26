@@ -21,6 +21,7 @@ local Network: any
 local PlayerDataService: any
 local EcologyService: any
 local InventoryService: any
+local DialogueService: any
 local RateLimiter: any
 local Validators: any
 
@@ -115,17 +116,42 @@ local function handleInteract(player: Player, data: any)
 		return { success = false, error = "Invalid request" }
 	end
 
-	-- TODO: Find target in world
-	-- TODO: Check if player is close enough
-	-- TODO: Process interaction based on type
+	local interactionType = cleanData.interactionType
 
-	print(string.format("[Handlers] %s interacted with %s (%s)", player.Name, cleanData.targetId, cleanData.interactionType))
+	-- Handle dialogue response
+	if interactionType == "dialogue_response" then
+		if not DialogueService then
+			return { success = false, error = "DialogueService not available" }
+		end
+
+		local responseIndex = cleanData.responseIndex
+		if type(responseIndex) ~= "number" then
+			return { success = false, error = "Invalid response index" }
+		end
+
+		local success = DialogueService:selectResponse(player, responseIndex)
+		return {
+			success = success,
+			data = { dialogueAdvanced = success },
+		}
+	end
+
+	-- Handle dialogue close
+	if interactionType == "dialogue_close" then
+		if DialogueService then
+			DialogueService:endConversation(player)
+		end
+		return { success = true }
+	end
+
+	-- Default interaction handling
+	print(string.format("[Handlers] %s interacted with %s (%s)", player.Name, cleanData.targetId or "unknown", interactionType))
 
 	return {
 		success = true,
 		data = {
-			interactionId = cleanData.targetId .. "_" .. os.time(),
-			dialogueData = nil, -- Populate for NPCs
+			interactionId = (cleanData.targetId or "interact") .. "_" .. os.time(),
+			dialogueData = nil,
 		},
 	}
 end
@@ -352,6 +378,11 @@ function Handlers:init()
 	InventoryService = require(script.Parent.Parent.Inventory.InventoryService)
 	RateLimiter = require(script.Parent.RateLimiter)
 	Validators = require(script.Parent.Validators)
+
+	-- Load DialogueService (optional, may not exist in all places)
+	pcall(function()
+		DialogueService = require(script.Parent.Parent.Dialogue.DialogueService)
+	end)
 
 	-- Initialize InventoryService
 	InventoryService:init()

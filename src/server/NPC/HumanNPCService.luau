@@ -234,7 +234,7 @@ local function createHumanoidModel(definition: HumanNPCDefinition): Model
 	-- Name display
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = "NameDisplay"
-	billboard.Size = UDim2.new(0, 150, 0, 50)
+	billboard.Size = UDim2.new(0, 200, 0, 60) -- Wider for longer titles
 	billboard.StudsOffset = Vector3.new(0, 3, 0)
 	billboard.AlwaysOnTop = false
 	billboard.MaxDistance = 50
@@ -242,27 +242,27 @@ local function createHumanoidModel(definition: HumanNPCDefinition): Model
 
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Name = "NameLabel"
-	nameLabel.Size = UDim2.new(1, 0, 0.6, 0)
+	nameLabel.Size = UDim2.new(1, 0, 0.55, 0)
 	nameLabel.Position = UDim2.new(0, 0, 0, 0)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = definition.name
 	nameLabel.TextColor3 = Color3.new(1, 1, 1)
 	nameLabel.TextStrokeTransparency = 0.5
 	nameLabel.Font = Enum.Font.GothamBold
-	nameLabel.TextSize = 16
+	nameLabel.TextSize = 18 -- Slightly larger
 	nameLabel.Parent = billboard
 
 	if definition.title then
 		local titleLabel = Instance.new("TextLabel")
 		titleLabel.Name = "TitleLabel"
-		titleLabel.Size = UDim2.new(1, 0, 0.4, 0)
-		titleLabel.Position = UDim2.new(0, 0, 0.6, 0)
+		titleLabel.Size = UDim2.new(1, 0, 0.45, 0)
+		titleLabel.Position = UDim2.new(0, 0, 0.55, 0)
 		titleLabel.BackgroundTransparency = 1
 		titleLabel.Text = definition.title
 		titleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-		titleLabel.TextStrokeTransparency = 0.7
+		titleLabel.TextStrokeTransparency = 0.6
 		titleLabel.Font = Enum.Font.Gotham
-		titleLabel.TextSize = 12
+		titleLabel.TextSize = 14 -- Increased from 12 for readability
 		titleLabel.Parent = billboard
 	end
 

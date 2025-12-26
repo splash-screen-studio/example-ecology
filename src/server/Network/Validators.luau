@@ -130,26 +130,55 @@ end
 -- INTERACTION VALIDATORS
 --------------------------------------------------------------------------------
 
-function Validators.validateInteract(data: any): (boolean, { targetId: string, interactionType: string }?)
+function Validators.validateInteract(data: any): (boolean, { targetId: string?, interactionType: string, responseIndex: number? }?)
 	if not isTable(data) then
 		return false, nil
 	end
 
-	local targetId = data.targetId
 	local interactionType = data.interactionType
 
-	if not isValidString(targetId, 1, 100) then
+	-- Valid interaction types
+	local validTypes = {
+		talk = true,
+		examine = true,
+		use = true,
+		feed = true,
+		pet = true,
+		dialogue_response = true,
+		dialogue_close = true,
+	}
+
+	if not isValidString(interactionType, 1, 30) or not validTypes[interactionType] then
 		return false, nil
 	end
 
-	local validTypes = { talk = true, examine = true, use = true, feed = true, pet = true }
-	if not isValidString(interactionType, 1, 20) or not validTypes[interactionType] then
+	-- Dialogue interactions don't require targetId
+	if interactionType == "dialogue_response" then
+		local responseIndex = data.responseIndex
+		if type(responseIndex) ~= "number" or responseIndex < 1 or responseIndex > 10 then
+			return false, nil
+		end
+		return true, {
+			interactionType = sanitizeString(interactionType, 30),
+			responseIndex = math.floor(responseIndex),
+		}
+	end
+
+	if interactionType == "dialogue_close" then
+		return true, {
+			interactionType = sanitizeString(interactionType, 30),
+		}
+	end
+
+	-- Regular interactions require targetId
+	local targetId = data.targetId
+	if not isValidString(targetId, 1, 100) then
 		return false, nil
 	end
 
 	return true, {
 		targetId = sanitizeString(targetId, 100),
-		interactionType = sanitizeString(interactionType, 20),
+		interactionType = sanitizeString(interactionType, 30),
 	}
 end
 
