@@ -169,7 +169,7 @@ function TerrainGenerator:generate(config: TerrainConfig)
 			local material = selectMaterial(x, z, height, config)
 
 			-- Fill from bottom to height
-			local minY = -50 -- Below ground base
+			local minY = -70 -- Below ground base (well below terrarium floor)
 			local maxY = height
 
 			if maxY > minY then
@@ -238,7 +238,7 @@ function TerrainGenerator:ensureSolidFloor(config: TerrainConfig)
 	local minZ = config.center.Z - config.size.Z / 2
 	local maxZ = config.center.Z + config.size.Z / 2
 
-	local floorLevel = -50
+	local floorLevel = -70
 	local floorThickness = 20
 
 	local floorRegion = Region3.new(
@@ -258,7 +258,7 @@ function TerrainGenerator:clear(config: TerrainConfig)
 	local region = Region3.new(
 		Vector3.new(
 			config.center.X - config.size.X / 2 - margin,
-			-100,
+			-120, -- Below the deeper terrain floor
 			config.center.Z - config.size.Z / 2 - margin
 		),
 		Vector3.new(

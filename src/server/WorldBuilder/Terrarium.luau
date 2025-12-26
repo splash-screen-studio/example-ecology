@@ -115,14 +115,14 @@ local function createBox(config: TerrariumConfig): Folder
 	)
 	ceiling.Parent = container
 
-	-- Floor (optional, usually terrain)
+	-- Floor (below terrain, mostly invisible)
 	local floor = createGlassPart(
 		"Floor",
 		Vector3.new(size.X + thickness * 2, thickness, size.Z + thickness * 2),
-		CFrame.new(center.X, center.Y - 50 - thickness / 2, center.Z),
+		CFrame.new(center.X, center.Y - 80 - thickness / 2, center.Z),
 		config
 	)
-	floor.Transparency = 0.8 -- More transparent floor
+	floor.Transparency = 0.95 -- Nearly invisible, just for collision
 	floor.Parent = container
 
 	return container
@@ -215,14 +215,14 @@ local function createDome(config: TerrariumConfig): Folder
 		wall.Parent = container
 	end
 
-	-- Floor
+	-- Floor (below terrain, mostly invisible)
 	local floor = createGlassPart(
 		"Floor",
 		Vector3.new(size.X + thickness * 2, thickness, size.Z + thickness * 2),
-		CFrame.new(center.X, center.Y - 50 - thickness / 2, center.Z),
+		CFrame.new(center.X, center.Y - 80 - thickness / 2, center.Z),
 		config
 	)
-	floor.Transparency = 0.8
+	floor.Transparency = 0.95 -- Nearly invisible, just for collision
 	floor.Parent = container
 
 	return container
