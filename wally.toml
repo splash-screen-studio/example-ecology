@@ -1,0 +1,8 @@
+[package]
+name = "bedwards/example-ecology"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[server-dependencies]
+ProfileService = "etheroit/profileservice@1.2.0"

@@ -32,6 +32,8 @@ sourcemap.json
 
 # Wally (Roblox package manager)
 Packages/
+ServerPackages/
+DevPackages/
 wally.lock
 
 # OS files

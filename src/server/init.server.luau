@@ -1,6 +1,7 @@
 local PlaceConfig = require(game:GetService("ReplicatedStorage").Shared.PlaceConfig)
 local WorldBuilder = require(script.WorldBuilder)
 local WaterController = require(script.Character.WaterController)
+local PlayerDataService = require(script.Data.PlayerDataService)
 
 -- Remove default Baseplate (we use generated terrain)
 local baseplate = workspace:FindFirstChild("Baseplate")
@@ -8,6 +9,9 @@ if baseplate then baseplate:Destroy() end
 
 -- Apply place-specific lighting
 PlaceConfig.applyLighting()
+
+-- Initialize player data persistence
+PlayerDataService:init()
 
 print("Server started:", PlaceConfig.getCurrent().name)
 
@@ -22,4 +26,5 @@ WaterController:init()
 -- Export to _G for easy Studio command bar access
 _G.WorldBuilder = WorldBuilder
 _G.WaterController = WaterController
-print("WorldBuilder and WaterController available via _G")
+_G.PlayerDataService = PlayerDataService
+print("WorldBuilder, WaterController, PlayerDataService available via _G")
