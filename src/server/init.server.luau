@@ -4,6 +4,7 @@ local WaterController = require(script.Character.WaterController)
 local PlayerDataService = require(script.Data.PlayerDataService)
 local NetworkHandlers = require(script.Network.Handlers)
 local EcologyService = require(script.Ecology.EcologyService)
+local NPCService = require(script.NPC.NPCService)
 
 -- Remove default Baseplate (we use generated terrain)
 local baseplate = workspace:FindFirstChild("Baseplate")
@@ -16,6 +17,7 @@ PlaceConfig.applyLighting()
 PlayerDataService:init()
 NetworkHandlers:init()
 EcologyService:init()
+NPCService:init()
 
 print("Server started:", PlaceConfig.getCurrent().name)
 
@@ -32,9 +34,10 @@ _G.WorldBuilder = WorldBuilder
 _G.WaterController = WaterController
 _G.PlayerDataService = PlayerDataService
 _G.EcologyService = EcologyService
+_G.NPCService = NPCService
 
 -- InventoryService is initialized by NetworkHandlers
 local InventoryService = require(script.Inventory.InventoryService)
 _G.InventoryService = InventoryService
 
-print("WorldBuilder, WaterController, PlayerDataService, EcologyService, InventoryService available via _G")
+print("WorldBuilder, WaterController, PlayerDataService, EcologyService, InventoryService, NPCService available via _G")
