@@ -23,6 +23,8 @@ An ecology simulation game. You are an Ecologist discovering what's wrong with i
 | [TERRAIN_WATER.md](./TERRAIN_WATER.md) | Water systems, swimming, terrain generation |
 | [PLACEMENT.md](./PLACEMENT.md) | Object/NPC placement, elevation service |
 | [NPC_ANIMALS.md](./NPC_ANIMALS.md) | Animal animation, rigging, AI behavior |
+| [NPC_PEOPLE.md](./NPC_PEOPLE.md) | Human NPCs, dialogue, quests, relationships |
+| [AUDIO.md](./AUDIO.md) | Music, ambient, SFX, spatial audio, reverb |
 | [UI_HUD.md](./UI_HUD.md) | Mobile-first UI, HUD, status bars, minimap |
 | [GAMEPLAY_MECHANICS.md](./GAMEPLAY_MECHANICS.md) | Items, combat, survival, teleporting |
 | [ENGINEERING.md](./ENGINEERING.md) | Git workflow, testing, CI/CD, code patterns |
@@ -169,6 +171,8 @@ See individual docs for implementation details:
 
 1. **Terrain** → [TERRAIN_WATER.md](./TERRAIN_WATER.md)
 2. **Animals** → [NPC_ANIMALS.md](./NPC_ANIMALS.md)
-3. **Mechanics** → [GAMEPLAY_MECHANICS.md](./GAMEPLAY_MECHANICS.md)
-4. **UI** → [UI_HUD.md](./UI_HUD.md)
-5. **Story** → [STORY_DESIGN.md](./STORY_DESIGN.md)
+3. **Human NPCs** → [NPC_PEOPLE.md](./NPC_PEOPLE.md)
+4. **Audio** → [AUDIO.md](./AUDIO.md)
+5. **Mechanics** → [GAMEPLAY_MECHANICS.md](./GAMEPLAY_MECHANICS.md)
+6. **UI** → [UI_HUD.md](./UI_HUD.md)
+7. **Story** → [STORY_DESIGN.md](./STORY_DESIGN.md)
