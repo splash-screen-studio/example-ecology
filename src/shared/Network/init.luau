@@ -50,6 +50,7 @@ local EventDefinitions = {
 
 	-- Player State
 	{ name = "StatUpdate", type = "event" }, -- Server -> Client
+	{ name = "InventoryUpdate", type = "event" }, -- Server -> Client (inventory changed)
 	{ name = "UpdateSettings", type = "event" }, -- Client -> Server
 
 	-- Teleport

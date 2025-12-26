@@ -126,13 +126,9 @@ function InventoryService:addItem(player: Player, itemId: string, quantity: numb
 		}
 	end
 
-	-- Notify client
+	-- Notify client of full inventory update
 	if Network then
-		Network.Events.StatUpdate:FireClient(player, {
-			inventoryChanged = true,
-			itemId = itemId,
-			quantity = inventory.items[itemId].quantity,
-		})
+		Network.Events.InventoryUpdate:FireClient(player, inventory.items)
 	end
 
 	return true
@@ -159,14 +155,9 @@ function InventoryService:removeItem(player: Player, itemId: string, quantity: n
 		inventory.items[itemId] = nil
 	end
 
-	-- Notify client
+	-- Notify client of full inventory update
 	if Network then
-		local newQuantity = existing.quantity > 0 and existing.quantity or 0
-		Network.Events.StatUpdate:FireClient(player, {
-			inventoryChanged = true,
-			itemId = itemId,
-			quantity = newQuantity,
-		})
+		Network.Events.InventoryUpdate:FireClient(player, inventory.items)
 	end
 
 	return true

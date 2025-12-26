@@ -297,6 +297,44 @@ local function handleRequestTeleport(player: Player, data: any)
 end
 
 --------------------------------------------------------------------------------
+-- PLAYER DATA SYNC
+--------------------------------------------------------------------------------
+
+local function sendPlayerStats(player: Player)
+	local data = PlayerDataService:getData(player)
+	if not data then
+		return
+	end
+
+	Network.Events.StatUpdate:FireClient(player, {
+		hunger = data.stats.hunger,
+		thirst = data.stats.thirst,
+	})
+end
+
+local function sendPlayerInventory(player: Player)
+	local data = PlayerDataService:getData(player)
+	if not data then
+		return
+	end
+
+	Network.Events.InventoryUpdate:FireClient(player, data.inventory.items)
+end
+
+local function onPlayerReady(player: Player)
+	-- Wait for player data to load
+	local data = PlayerDataService:waitForData(player, 10)
+	if not data then
+		warn("[Handlers] Could not load data for", player.Name)
+		return
+	end
+
+	-- Send initial stats and inventory
+	sendPlayerStats(player)
+	sendPlayerInventory(player)
+end
+
+--------------------------------------------------------------------------------
 -- INITIALIZATION
 --------------------------------------------------------------------------------
 
@@ -314,6 +352,16 @@ function Handlers:init()
 
 	-- Initialize network (creates remotes)
 	Network.init()
+
+	-- Send initial data to existing players
+	for _, player in Players:GetPlayers() do
+		task.spawn(onPlayerReady, player)
+	end
+
+	-- Send initial data to new players
+	Players.PlayerAdded:Connect(function(player)
+		task.spawn(onPlayerReady, player)
+	end)
 
 	-- Connect event handlers
 	Network.Events.UseItem.OnServerEvent:Connect(wrapHandler("UseItem", handleUseItem))

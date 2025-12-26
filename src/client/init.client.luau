@@ -15,11 +15,11 @@ local PlaceConfig = require(Shared.PlaceConfig)
 local AudioController = require(script.Audio)
 AudioController:init()
 
--- Client network (when needed)
--- local ClientNetwork = require(Shared.Network.ClientNetwork)
--- ClientNetwork:init()
+local HUD = require(script.HUD)
+HUD:init()
 
 print("Client started:", PlaceConfig.getCurrent().name)
 
 -- Export to _G for debugging
 _G.AudioController = AudioController
+_G.HUD = HUD
