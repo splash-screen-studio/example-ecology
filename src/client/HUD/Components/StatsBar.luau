@@ -120,11 +120,12 @@ end
 --------------------------------------------------------------------------------
 
 function StatsBar.create(parent: GuiObject): StatsBarWidget
-	-- Main container
+	-- Main container (top-right to avoid Roblox default HUD in top-left)
 	local frame = Instance.new("Frame")
 	frame.Name = "StatsBar"
 	frame.Size = UDim2.new(0, CONFIG.BAR_WIDTH + CONFIG.ICON_SIZE + CONFIG.PADDING * 2, 0, #STAT_CONFIGS * (CONFIG.ICON_SIZE + CONFIG.BAR_SPACING))
-	frame.Position = UDim2.new(0, 10, 0, 10)
+	frame.AnchorPoint = Vector2.new(1, 0)
+	frame.Position = UDim2.new(1, -10, 0, 10)
 	frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	frame.BackgroundTransparency = 0.5
 	frame.BorderSizePixel = 0
