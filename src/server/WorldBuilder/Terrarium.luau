@@ -52,11 +52,7 @@ local function createGlassPart(name: string, size: Vector3, cframe: CFrame, conf
 	part.CanCollide = true
 	part.Anchored = true
 	part.CastShadow = false
-
-	-- Add slight reflection
-	local surfaceAppearance = Instance.new("SurfaceAppearance")
-	surfaceAppearance.Name = "GlassAppearance"
-	surfaceAppearance.Parent = part
+	part.Reflectance = 0.1 -- Subtle glass reflection
 
 	return part
 end
