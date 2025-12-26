@@ -20,6 +20,7 @@ An ecology simulation game. You are an Ecologist discovering what's wrong with i
 |----------|---------|
 | [DESIGN.md](./DESIGN.md) | Visual style, art direction |
 | [WORLDBUILDING.md](./WORLDBUILDING.md) | Terrain, models, Blender workflow, MCP usage |
+| [docs/ASSET_PIPELINE.md](./docs/ASSET_PIPELINE.md) | Blender to Roblox workflow, export settings |
 | [TERRAIN_WATER.md](./TERRAIN_WATER.md) | Water systems, swimming, terrain generation |
 | [PLACEMENT.md](./PLACEMENT.md) | Object/NPC placement, elevation service |
 | [NPC_ANIMALS.md](./NPC_ANIMALS.md) | Animal animation, rigging, AI behavior |

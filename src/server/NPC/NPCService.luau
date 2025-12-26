@@ -27,6 +27,7 @@ local NPCDefinitions = require(script.Parent.NPCDefinitions)
 
 -- Loaded after init
 local EcologyService: any
+local ModelLoader: any
 
 -- Configuration
 local CONFIG = {
@@ -53,13 +54,8 @@ local nextNPCId = 1
 -- OBJECT POOLING
 --------------------------------------------------------------------------------
 
-local function createNPCModel(definitionId: string): Model?
-	local def = NPCDefinitions.get(definitionId)
-	if not def then
-		return nil
-	end
-
-	-- Create placeholder model (replace with actual models later)
+local function createPlaceholderModel(def: Types.NPCDefinition): Model
+	-- Create placeholder model when no asset exists
 	local model = Instance.new("Model")
 	model.Name = def.name
 
@@ -91,11 +87,26 @@ local function createNPCModel(definitionId: string): Model?
 
 	model.PrimaryPart = body
 
-	-- Add Humanoid for animations (optional)
-	-- local humanoid = Instance.new("Humanoid")
-	-- humanoid.Parent = model
-
 	return model
+end
+
+local function createNPCModel(definitionId: string): Model?
+	local def = NPCDefinitions.get(definitionId)
+	if not def then
+		return nil
+	end
+
+	-- Try to load from asset library first
+	if ModelLoader then
+		local model = ModelLoader:cloneModel("Animals", definitionId)
+		if model then
+			model.Name = def.name
+			return model
+		end
+	end
+
+	-- Fallback to placeholder
+	return createPlaceholderModel(def)
 end
 
 local function getFromPool(definitionId: string): Model?
@@ -576,6 +587,11 @@ function NPCService:init()
 	pcall(function()
 		local ServerScriptService = game:GetService("ServerScriptService")
 		EcologyService = require(ServerScriptService.Server.Ecology.EcologyService)
+	end)
+
+	-- Load ModelLoader for asset loading
+	pcall(function()
+		ModelLoader = require(ReplicatedStorage.Shared.Assets.ModelLoader)
 	end)
 
 	-- Start update loop
