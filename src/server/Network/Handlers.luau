@@ -62,6 +62,12 @@ local function handleUseItem(player: Player, data: any)
 
 	if result.success then
 		print(string.format("[Handlers] %s used item: %s", player.Name, cleanData.itemId))
+	else
+		-- Send feedback to client about why item couldn't be used
+		Network.Events.InventoryUpdate:FireClient(player, {
+			useItemFailed = true,
+			message = result.message or "Cannot use this item",
+		})
 	end
 
 	return {

@@ -3,50 +3,89 @@
     FootstepService
 
     Material-aware footstep sounds.
-    Detects the surface the player is walking on and plays appropriate sounds.
+    Based on community best practices:
+    - Velocity-based detection with dynamic intervals
+    - Clone sounds and destroy after playback (no pooling)
+    - Don't interrupt playing sounds
+    - Disable default Roblox footsteps
+
+    References:
+    - Smile4's Material Footsteps
+    - Custom Walking Sounds [Release]
 ]]
 
 local FootstepService = {}
 
 -- Services
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
-
--- Dependencies
-local SoundPool = require(script.Parent.SoundPool)
 
 -- Lazy load
 local Audio: any
 local AudioConfig: any
 
--- Configuration
+-- Configuration (based on community best practices)
 local CONFIG = {
-	WALK_INTERVAL = 0.4, -- Seconds between footsteps when walking
-	RUN_INTERVAL = 0.25, -- Seconds between footsteps when running
+	SPEED_GATE = 8, -- Minimum speed to trigger footsteps
+	SPEED_MAXIMUM = 16, -- Reference speed for interval calculation
+	DELAY_MINIMUM = 0.25, -- Fastest footstep interval (running)
+	DELAY_MAXIMUM = 0.6, -- Slowest footstep interval (walking)
+	BASE_DELAY = 0.35, -- Base delay multiplier
 	RAYCAST_DISTANCE = 5, -- How far down to check for ground
-	SPEED_THRESHOLD = 12, -- Above this = running
+	FOOTSTEP_VOLUME = 0.5, -- Base volume for footsteps
+	LAND_VOLUME = 0.6, -- Volume for landing sounds
 }
 
 -- State
-local soundPool: any = nil
 local footstepFolder: Folder?
 local isEnabled = true
-local lastFootstep = 0
 local lastMaterial: Enum.Material? = nil
 local volumeMultiplier = 1
+local isRunning = false
+
+--------------------------------------------------------------------------------
+-- HELPERS
+--------------------------------------------------------------------------------
+
+local function disableDefaultFootsteps(character: Model)
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if rootPart then
+		local runningSound = rootPart:FindFirstChild("Running") :: Sound?
+		if runningSound then
+			runningSound.Volume = 0
+		end
+	end
+end
+
+local function getPlayer(): Player
+	return Players.LocalPlayer
+end
+
+local function getCharacter(): Model?
+	return getPlayer().Character
+end
+
+local function getHumanoid(): Humanoid?
+	local character = getCharacter()
+	return character and character:FindFirstChildOfClass("Humanoid")
+end
+
+local function getRootPart(): BasePart?
+	local character = getCharacter()
+	return character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
+end
 
 --------------------------------------------------------------------------------
 -- MATERIAL DETECTION
 --------------------------------------------------------------------------------
 
 local function getGroundMaterial(): Enum.Material?
-	local player = Players.LocalPlayer
-	local character = player and player.Character
-	local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+	local character = getCharacter()
+	local rootPart = getRootPart()
 
-	if not rootPart then
+	if not character or not rootPart then
 		return nil
 	end
 
@@ -54,10 +93,11 @@ local function getGroundMaterial(): Enum.Material?
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
 	rayParams.FilterDescendantsInstances = { character }
 
-	local rayOrigin = rootPart.Position
-	local rayDirection = Vector3.new(0, -CONFIG.RAYCAST_DISTANCE, 0)
-
-	local result = workspace:Raycast(rayOrigin, rayDirection, rayParams)
+	local result = workspace:Raycast(
+		rootPart.Position,
+		Vector3.new(0, -CONFIG.RAYCAST_DISTANCE, 0),
+		rayParams
+	)
 
 	if result then
 		return result.Material
@@ -66,31 +106,50 @@ local function getGroundMaterial(): Enum.Material?
 	return nil
 end
 
-local function isPlayerMoving(): (boolean, boolean)
-	local player = Players.LocalPlayer
-	local character = player and player.Character
-	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-
-	if not humanoid then
-		return false, false
+local function getMovementSpeed(): number
+	local rootPart = getRootPart()
+	if not rootPart then
+		return 0
 	end
 
-	local moveDirection = humanoid.MoveDirection
-	local isMoving = moveDirection.Magnitude > 0.1
-	local isRunning = humanoid.WalkSpeed > CONFIG.SPEED_THRESHOLD
+	-- Use horizontal velocity only (ignore Y)
+	local velocity = rootPart.AssemblyLinearVelocity
+	return Vector3.new(velocity.X, 0, velocity.Z).Magnitude
+end
 
-	-- Check if grounded
+local function isGrounded(): boolean
+	local humanoid = getHumanoid()
+	if not humanoid then
+		return false
+	end
+
 	local state = humanoid:GetState()
-	local isGrounded = state ~= Enum.HumanoidStateType.Freefall
+	return state ~= Enum.HumanoidStateType.Freefall
 		and state ~= Enum.HumanoidStateType.Jumping
 		and state ~= Enum.HumanoidStateType.Swimming
-
-	return isMoving and isGrounded, isRunning
 end
 
 --------------------------------------------------------------------------------
 -- SOUND PLAYBACK
 --------------------------------------------------------------------------------
+
+local function playSound(soundId: string, volume: number)
+	if soundId == "rbxassetid://0" then
+		return -- Skip placeholder sounds
+	end
+
+	local sound = Instance.new("Sound")
+	sound.SoundId = soundId
+	sound.Volume = volume * volumeMultiplier
+	sound.RollOffMode = Enum.RollOffMode.Linear
+	sound.RollOffMinDistance = 0
+	sound.RollOffMaxDistance = 100
+	sound.Parent = footstepFolder
+	sound:Play()
+
+	-- Auto-cleanup after sound finishes
+	Debris:AddItem(sound, sound.TimeLength + 0.1)
+end
 
 local function playFootstep(material: Enum.Material)
 	if not AudioConfig then
@@ -102,58 +161,110 @@ local function playFootstep(material: Enum.Material)
 		return
 	end
 
-	local sound = soundPool:get()
-	if not sound then
-		return
-	end
-
 	-- Pick random sound from the list
 	local soundId = footstepDef.sounds[math.random(1, #footstepDef.sounds)]
 
-	sound.Name = "Footstep"
+	-- Calculate volume with material-specific adjustment
+	local volume = (footstepDef.volume or CONFIG.FOOTSTEP_VOLUME) * volumeMultiplier
+
+	-- Apply slight pitch variation
+	local sound = Instance.new("Sound")
 	sound.SoundId = soundId
-	sound.Volume = footstepDef.volume * volumeMultiplier
-
-	-- Apply pitch variation
-	local pitchVar = footstepDef.pitchVariation
-	sound.PlaybackSpeed = 1 + (math.random() * 2 - 1) * pitchVar
-
+	sound.Volume = volume
+	sound.PlaybackSpeed = 1 + (math.random() * 2 - 1) * (footstepDef.pitchVariation or 0.1)
+	sound.RollOffMode = Enum.RollOffMode.Linear
+	sound.RollOffMinDistance = 0
+	sound.RollOffMaxDistance = 100
 	sound.Parent = footstepFolder
 	sound:Play()
 
-	-- Release when done
-	sound.Ended:Once(function()
-		soundPool:release(sound)
-	end)
+	-- Auto-cleanup after sound finishes (don't cut it off!)
+	Debris:AddItem(sound, sound.TimeLength + 0.2)
+
+	lastMaterial = material
 end
 
 --------------------------------------------------------------------------------
--- UPDATE LOOP
+-- FOOTSTEP LOOP (Recursive task.delay approach)
 --------------------------------------------------------------------------------
 
-local function update(dt: number)
+local function footstepLoop()
+	local humanoid = getHumanoid()
+	if not humanoid or humanoid.Health <= 0 then
+		-- Character dead or gone, stop loop
+		return
+	end
+
 	if not isEnabled then
+		-- Disabled, but keep checking
+		task.delay(0.5, footstepLoop)
 		return
 	end
 
-	local isMoving, isRunning = isPlayerMoving()
+	local speed = getMovementSpeed()
+	local grounded = isGrounded()
 
-	if not isMoving then
-		return
+	-- Calculate dynamic delay based on speed
+	local delay: number
+	if speed > CONFIG.SPEED_GATE then
+		-- Faster movement = shorter delay
+		delay = math.clamp(
+			CONFIG.BASE_DELAY * (CONFIG.SPEED_MAXIMUM / speed),
+			CONFIG.DELAY_MINIMUM,
+			CONFIG.DELAY_MAXIMUM
+		)
+	else
+		delay = CONFIG.DELAY_MAXIMUM
 	end
 
-	local interval = if isRunning then CONFIG.RUN_INTERVAL else CONFIG.WALK_INTERVAL
-	lastFootstep = lastFootstep + dt
-
-	if lastFootstep >= interval then
-		lastFootstep = 0
-
+	-- Play footstep if moving fast enough and grounded
+	if speed > CONFIG.SPEED_GATE and grounded then
 		local material = getGroundMaterial()
 		if material then
-			lastMaterial = material
 			playFootstep(material)
 		end
 	end
+
+	-- Schedule next check
+	task.delay(delay, footstepLoop)
+end
+
+local function startFootstepLoop()
+	-- Start the recursive loop
+	task.spawn(footstepLoop)
+end
+
+--------------------------------------------------------------------------------
+-- CHARACTER HANDLING
+--------------------------------------------------------------------------------
+
+local function onCharacterAdded(character: Model)
+	-- Wait for character to fully load
+	local humanoid = character:WaitForChild("Humanoid", 10) :: Humanoid?
+	if not humanoid then
+		return
+	end
+
+	-- Disable default footsteps
+	task.wait(0.1) -- Wait for sounds to be added
+	disableDefaultFootsteps(character)
+
+	-- Start footstep loop for this character
+	startFootstepLoop()
+
+	-- Handle landing sounds
+	humanoid.StateChanged:Connect(function(_, newState)
+		if newState == Enum.HumanoidStateType.Landed then
+			local material = getGroundMaterial()
+			if material and AudioConfig then
+				local footstepDef = AudioConfig.getFootstepForMaterial(material)
+				if footstepDef and #footstepDef.sounds > 0 then
+					local soundId = footstepDef.sounds[math.random(1, #footstepDef.sounds)]
+					playSound(soundId, CONFIG.LAND_VOLUME)
+				end
+			end
+		end
+	end)
 end
 
 --------------------------------------------------------------------------------
@@ -169,7 +280,7 @@ function FootstepService:isEnabled(): boolean
 end
 
 function FootstepService:setVolume(volume: number)
-	volumeMultiplier = math.clamp(volume, 0, 1)
+	volumeMultiplier = math.clamp(volume, 0, 2)
 end
 
 function FootstepService:getVolume(): number
@@ -189,16 +300,19 @@ function FootstepService:init()
 	Audio = require(ReplicatedStorage.Shared.Audio)
 	AudioConfig = Audio.Config
 
-	-- Create footstep folder
+	-- Create footstep folder in SoundService
 	footstepFolder = Instance.new("Folder")
 	footstepFolder.Name = "FootstepSounds"
 	footstepFolder.Parent = SoundService
 
-	-- Create sound pool
-	soundPool = SoundPool.new(footstepFolder, 5)
+	-- Handle current character
+	local player = getPlayer()
+	if player.Character then
+		onCharacterAdded(player.Character)
+	end
 
-	-- Start update loop
-	RunService.Heartbeat:Connect(update)
+	-- Handle future characters (respawns)
+	player.CharacterAdded:Connect(onCharacterAdded)
 
 	print("[FootstepService] Initialized")
 end

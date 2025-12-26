@@ -8,6 +8,8 @@
 
 local InventoryHotbar = {}
 
+local VERSION = "1.2.0" -- Fixed emoji compatibility (older Unicode)
+
 -- Services
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -34,8 +36,11 @@ export type HotbarWidget = {
 	setItems: (self: HotbarWidget, items: { InventoryItem? }) -> (),
 	selectSlot: (self: HotbarWidget, slotIndex: number) -> (),
 	getSelectedItem: (self: HotbarWidget) -> InventoryItem?,
+	showMessage: (self: HotbarWidget, message: string, duration: number?) -> (),
+	hideMessage: (self: HotbarWidget) -> (),
 	onSlotClicked: ((slotIndex: number) -> ())?,
 	onUseItem: ((item: InventoryItem) -> ())?,
+	onDiscardItem: ((item: InventoryItem) -> ())?,
 	destroy: (self: HotbarWidget) -> (),
 }
 
@@ -58,23 +63,74 @@ local SLOT_COLORS = {
 	hover = HUDConstants.Colors.Hover,
 }
 
--- Simple item icons (text-based for now)
+-- Item icons (using older Unicode emojis for compatibility)
+-- Avoid Emoji 13.0+ (2020+) as they show as white rectangles on some platforms
 local ITEM_ICONS: { [string]: string } = {
+	-- Food
 	apple = "🍎",
-	berries = "🫐",
+	berries = "🍇", -- Grapes (older than blueberries 🫐)
 	fish = "🐟",
 	cooked_fish = "🍣",
 	water_bottle = "💧",
+	herbal_tea = "🍵",
+
+	-- Seeds
 	grass_seeds = "🌱",
-	watering_can = "🪴",
+	lily_seeds = "🌸",
+	prairie_seeds = "🌾",
+
+	-- Tools
+	watering_can = "🌿", -- Herb (older than potted plant 🪴)
 	fishing_rod = "🎣",
 	binoculars = "🔭",
-	net = "🪺",
+	net = "🕸", -- Spider web (older than nest 🪹)
 	shovel = "⛏️",
-	wood = "🪵",
-	stone = "🪨",
-	feather = "🪶",
-	default = "📦",
+	ecosystem_scanner = "📡",
+
+	-- Resources
+	wood = "🌲", -- Tree (older than wood log 🪵)
+	stone = "⛰️", -- Mountain emoji
+	fiber = "🌀", -- Cyclone/spiral (bright, visible)
+	feather = "🕊", -- Dove (older than feather 🪶)
+	shell = "🐚",
+	rare_flower = "🌺",
+
+	-- Misc
+	animal_feed = "🌽",
+	cleaning_supplies = "✨", -- Sparkles (older than broom 🧹)
+	research_sample = "⚗", -- Alembic (older than test tube 🧪)
+
+	-- Fallback
+	default = "❓",
+}
+
+-- Short text fallback names (for when emojis don't render)
+local ITEM_SHORT_NAMES: { [string]: string } = {
+	apple = "APL",
+	berries = "BRY",
+	fish = "FSH",
+	cooked_fish = "CFH",
+	water_bottle = "WTR",
+	herbal_tea = "TEA",
+	grass_seeds = "GRS",
+	lily_seeds = "LLY",
+	prairie_seeds = "PRR",
+	watering_can = "CAN",
+	fishing_rod = "ROD",
+	binoculars = "BIN",
+	net = "NET",
+	shovel = "SHV",
+	ecosystem_scanner = "SCN",
+	wood = "WOD",
+	stone = "STN",
+	fiber = "FBR",
+	feather = "FTH",
+	shell = "SHL",
+	rare_flower = "FLR",
+	animal_feed = "FED",
+	cleaning_supplies = "CLN",
+	research_sample = "SMP",
+	default = "???",
 }
 
 --------------------------------------------------------------------------------
@@ -83,6 +139,10 @@ local ITEM_ICONS: { [string]: string } = {
 
 local function getItemIcon(itemId: string): string
 	return ITEM_ICONS[itemId] or ITEM_ICONS.default
+end
+
+local function getItemShortName(itemId: string): string
+	return ITEM_SHORT_NAMES[itemId] or ITEM_SHORT_NAMES.default
 end
 
 local function loadDependencies()
@@ -96,7 +156,7 @@ end
 -- UI CREATION
 --------------------------------------------------------------------------------
 
-local function createSlot(index: number, onClicked: (number) -> ()): Frame
+local function createSlot(index: number, onClicked: (number) -> (), onRightClicked: (number) -> ()): Frame
 	local slot = Instance.new("Frame")
 	slot.Name = "Slot" .. index
 	slot.Size = UDim2.new(0, CONFIG.SLOT_SIZE, 0, CONFIG.SLOT_SIZE)
@@ -120,10 +180,10 @@ local function createSlot(index: number, onClicked: (number) -> ()): Frame
 	numLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
 	numLabel.Parent = slot
 
-	-- Item icon
+	-- Item icon (emoji)
 	local iconLabel = Instance.new("TextLabel")
 	iconLabel.Name = "Icon"
-	iconLabel.Size = UDim2.new(1, -CONFIG.ICON_PADDING * 2, 1, -CONFIG.ICON_PADDING * 2)
+	iconLabel.Size = UDim2.new(1, -CONFIG.ICON_PADDING * 2, 0, 24)
 	iconLabel.Position = UDim2.new(0, CONFIG.ICON_PADDING, 0, CONFIG.ICON_PADDING)
 	iconLabel.BackgroundTransparency = 1
 	iconLabel.Text = ""
@@ -132,11 +192,25 @@ local function createSlot(index: number, onClicked: (number) -> ()): Frame
 	iconLabel.TextColor3 = Color3.new(1, 1, 1)
 	iconLabel.Parent = slot
 
+	-- Item short name (text fallback below icon)
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Name = "ItemName"
+	nameLabel.Size = UDim2.new(1, -4, 0, 12)
+	nameLabel.Position = UDim2.new(0, 2, 1, -14)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = ""
+	nameLabel.TextSize = 9
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+	nameLabel.Visible = false
+	nameLabel.Parent = slot
+
 	-- Quantity label
 	local quantityLabel = Instance.new("TextLabel")
 	quantityLabel.Name = "Quantity"
 	quantityLabel.Size = UDim2.new(0, CONFIG.QUANTITY_SIZE, 0, CONFIG.QUANTITY_SIZE)
-	quantityLabel.Position = UDim2.new(1, -CONFIG.QUANTITY_SIZE - 2, 1, -CONFIG.QUANTITY_SIZE - 2)
+	quantityLabel.Position = UDim2.new(1, -CONFIG.QUANTITY_SIZE - 2, 0, 2)
 	quantityLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	quantityLabel.BackgroundTransparency = 0.3
 	quantityLabel.Text = ""
@@ -160,6 +234,11 @@ local function createSlot(index: number, onClicked: (number) -> ()): Frame
 
 	button.MouseButton1Click:Connect(function()
 		onClicked(index)
+	end)
+
+	-- Right-click to discard
+	button.MouseButton2Click:Connect(function()
+		onRightClicked(index)
 	end)
 
 	button.MouseEnter:Connect(function()
@@ -205,6 +284,29 @@ function InventoryHotbar.create(parent: GuiObject): HotbarWidget
 	padding.PaddingTop = UDim.new(0, containerPad)
 	padding.Parent = frame
 
+	-- Message label (above hotbar) - parented to screenGui, not frame, to avoid padding issues
+	local messageLabel = Instance.new("TextLabel")
+	messageLabel.Name = "MessageLabel"
+	messageLabel.Size = UDim2.new(0, totalWidth + containerPad * 2, 0, 28)
+	-- Position centered above the hotbar frame
+	local hotbarY = -CONFIG.SLOT_SIZE - CONFIG.SCREEN_PADDING - containerPad
+	local messageY = hotbarY - 28 - 8 -- message height + gap
+	messageLabel.Position = UDim2.new(0.5, 0, 1, messageY)
+	messageLabel.AnchorPoint = Vector2.new(0.5, 0)
+	messageLabel.BackgroundColor3 = Color3.fromRGB(180, 60, 60) -- Red/warning color
+	messageLabel.BackgroundTransparency = 0.2
+	messageLabel.BorderSizePixel = 0
+	messageLabel.Text = "Inventory full"
+	messageLabel.TextSize = HUDConstants.Fonts.SizeMedium
+	messageLabel.Font = HUDConstants.Fonts.Primary
+	messageLabel.TextColor3 = Color3.new(1, 1, 1)
+	messageLabel.Visible = false
+	messageLabel.Parent = parent -- Parent to screenGui, not frame
+
+	local msgCorner = Instance.new("UICorner")
+	msgCorner.CornerRadius = UDim.new(0, CONFIG.CORNER_RADIUS)
+	msgCorner.Parent = messageLabel
+
 	-- Create widget first (for closure)
 	local widget: HotbarWidget
 	local slots: { Frame } = {}
@@ -216,16 +318,24 @@ function InventoryHotbar.create(parent: GuiObject): HotbarWidget
 		end
 		widget:selectSlot(slotIndex)
 
-		-- Use item on double-tap / double-click
+		-- Use item on click
 		local item = widget.items[slotIndex]
 		if item and widget.onUseItem then
 			widget.onUseItem(item)
 		end
 	end
 
+	local function onSlotRightClicked(slotIndex: number)
+		-- Discard item on right-click
+		local item = widget.items[slotIndex]
+		if item and widget.onDiscardItem then
+			widget.onDiscardItem(item)
+		end
+	end
+
 	-- Create slots
 	for i = 1, CONFIG.SLOT_COUNT do
-		local slot = createSlot(i, onSlotClicked)
+		local slot = createSlot(i, onSlotClicked, onSlotRightClicked)
 		slot.Parent = frame
 		table.insert(slots, slot)
 		items[i] = nil
@@ -245,6 +355,7 @@ function InventoryHotbar.create(parent: GuiObject): HotbarWidget
 
 			local slot = self.slots[slotIndex]
 			local iconLabel = slot:FindFirstChild("Icon") :: TextLabel?
+			local nameLabel = slot:FindFirstChild("ItemName") :: TextLabel?
 			local quantityLabel = slot:FindFirstChild("Quantity") :: TextLabel?
 
 			if not iconLabel or not quantityLabel then
@@ -257,6 +368,12 @@ function InventoryHotbar.create(parent: GuiObject): HotbarWidget
 				iconLabel.Text = getItemIcon(item.itemId)
 				slot.BackgroundColor3 = if slotIndex == self.selectedSlot then SLOT_COLORS.selected else SLOT_COLORS.default
 
+				-- Show short name as fallback (always visible for clarity)
+				if nameLabel then
+					nameLabel.Text = getItemShortName(item.itemId)
+					nameLabel.Visible = true
+				end
+
 				if item.quantity > 1 then
 					quantityLabel.Text = tostring(item.quantity)
 					quantityLabel.Visible = true
@@ -265,6 +382,10 @@ function InventoryHotbar.create(parent: GuiObject): HotbarWidget
 				end
 			else
 				iconLabel.Text = ""
+				if nameLabel then
+					nameLabel.Text = ""
+					nameLabel.Visible = false
+				end
 				quantityLabel.Visible = false
 				slot.BackgroundColor3 = if slotIndex == self.selectedSlot then SLOT_COLORS.selected else SLOT_COLORS.empty
 			end
@@ -301,6 +422,25 @@ function InventoryHotbar.create(parent: GuiObject): HotbarWidget
 			return self.items[self.selectedSlot]
 		end,
 
+		showMessage = function(self, message: string, duration: number?)
+			messageLabel.Text = message
+			messageLabel.Visible = true
+
+			-- Auto-hide after duration (default 3 seconds)
+			if duration ~= 0 then
+				local hideDelay = duration or 3
+				task.delay(hideDelay, function()
+					if messageLabel.Visible and messageLabel.Text == message then
+						messageLabel.Visible = false
+					end
+				end)
+			end
+		end,
+
+		hideMessage = function(self)
+			messageLabel.Visible = false
+		end,
+
 		destroy = function(self)
 			self.frame:Destroy()
 		end,
@@ -327,6 +467,8 @@ function InventoryHotbar.create(parent: GuiObject): HotbarWidget
 		inputConnection:Disconnect()
 		originalDestroy(self)
 	end
+
+	print("[InventoryHotbar] v" .. VERSION .. " - Right-click to discard items")
 
 	return widget
 end

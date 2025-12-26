@@ -459,39 +459,68 @@ return SFXPlayer
 
 ### Footstep System
 
-```lua
-local function getGroundMaterial(character)
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
-    if not rootPart then return "grass" end
+**Best Practices (2025)**:
 
-    local rayResult = workspace:Raycast(
-        rootPart.Position,
-        Vector3.new(0, -5, 0)
+Based on community implementations like [Smile4's Material Footsteps](https://devforum.roblox.com/t/new-version-smile4s-material-footsteps-simple-customizable/2725074) and [Custom Walking Sounds](https://devforum.roblox.com/t/custom-walking-sounds-release/2289270):
+
+1. **Velocity-based detection** — Use `AssemblyLinearVelocity.Magnitude` instead of animation events
+2. **Dynamic intervals** — Faster movement = shorter delay between footsteps
+3. **Clone and destroy sounds** — Don't reuse sound instances; use `Debris:AddItem()` for cleanup
+4. **Don't interrupt sounds** — Let each footstep play to completion
+5. **Disable default sounds** — Mute `HumanoidRootPart.Running` to prevent doubling
+
+```lua
+-- Recursive task.delay loop (recommended pattern)
+local function footstepLoop()
+    local humanoid = getHumanoid()
+    if not humanoid or humanoid.Health <= 0 then return end
+
+    local speed = getMovementSpeed() -- Horizontal velocity only
+
+    -- Dynamic delay: faster = shorter interval
+    local delay = math.clamp(
+        0.35 * (16 / speed),  -- Base delay * (max speed / current speed)
+        0.25,  -- Min delay (running)
+        0.6    -- Max delay (walking)
     )
 
-    if rayResult then
-        local material = rayResult.Material
-        if material == Enum.Material.Water then
-            return "water"
-        elseif material == Enum.Material.Rock or material == Enum.Material.Slate then
-            return "stone"
-        else
-            return "grass"
-        end
+    if speed > 8 and isGrounded() then
+        playFootstep(getGroundMaterial())
     end
 
-    return "grass"
+    task.delay(delay, footstepLoop)
 end
 
-local function onStep(character)
-    local material = getGroundMaterial(character)
-    SFXPlayer:play("Player", "footstep_" .. material, {
-        position = character.HumanoidRootPart.Position,
-        volume = 0.5,
-        pitch = 0.9 + math.random() * 0.2,
-    })
+-- Sound playback with auto-cleanup (no pooling!)
+local function playFootstep(material)
+    local sound = Instance.new("Sound")
+    sound.SoundId = getFootstepSound(material)
+    sound.Volume = 0.5
+    sound.PlaybackSpeed = 1 + (math.random() * 0.2 - 0.1)
+    sound.Parent = SoundService.FootstepSounds
+    sound:Play()
+
+    -- Auto-destroy after playing (don't cut off!)
+    Debris:AddItem(sound, sound.TimeLength + 0.2)
+end
+
+-- Disable default Roblox footsteps
+local function disableDefaultFootsteps(character)
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        local running = rootPart:FindFirstChild("Running")
+        if running then running.Volume = 0 end
+    end
 end
 ```
+
+**Common Pitfalls**:
+- ❌ Using Heartbeat with fixed intervals (inconsistent with animation)
+- ❌ Stopping sounds when player stops (sounds cut off abruptly)
+- ❌ Sound pooling (adds complexity, causes issues)
+- ❌ Forgetting to disable default sounds (echo/doubling)
+
+**Our Implementation**: `src/client/Audio/FootstepService.luau`
 
 ---
 

@@ -3,7 +3,13 @@
     AudioConfig
 
     Central configuration for all audio in the game.
-    Sound IDs are placeholders - replace with actual Roblox asset IDs.
+
+    Sound Asset Sources:
+    - Footsteps: Roblox default + community assets
+    - UI: Need real assets from Creator Marketplace
+    - Ambient: Need real assets from Creator Marketplace
+
+    To find sounds: https://create.roblox.com/store (Audio section)
 ]]
 
 local Types = require(script.Parent.Types)
@@ -154,52 +160,53 @@ AudioConfig.AmbientZones = {
 -- FOOTSTEP MATERIALS
 --------------------------------------------------------------------------------
 
+-- Real footstep sound assets (community + Roblox default)
 AudioConfig.FootstepMaterials = {
 	{
 		material = Enum.Material.Grass,
-		sounds = { "rbxassetid://0", "rbxassetid://0", "rbxassetid://0" },
+		sounds = { "rbxassetid://9064714296", "rbxassetid://9083837523", "rbxassetid://6133185073" },
 		volume = 0.4,
 		pitchVariation = 0.15,
 	},
 	{
 		material = Enum.Material.LeafyGrass,
-		sounds = { "rbxassetid://0", "rbxassetid://0" },
+		sounds = { "rbxassetid://9064714296", "rbxassetid://9083837523" },
 		volume = 0.45,
 		pitchVariation = 0.15,
 	},
 	{
 		material = Enum.Material.Ground,
-		sounds = { "rbxassetid://0", "rbxassetid://0", "rbxassetid://0" },
+		sounds = { "rbxassetid://9064853890", "rbxassetid://833564121", "rbxassetid://9064853890" },
 		volume = 0.5,
 		pitchVariation = 0.1,
 	},
 	{
 		material = Enum.Material.Mud,
-		sounds = { "rbxassetid://0", "rbxassetid://0" },
+		sounds = { "rbxassetid://9064853890", "rbxassetid://9064853890" },
 		volume = 0.55,
 		pitchVariation = 0.12,
 	},
 	{
 		material = Enum.Material.Sand,
-		sounds = { "rbxassetid://0", "rbxassetid://0" },
+		sounds = { "rbxassetid://9064853890", "rbxassetid://833564121" },
 		volume = 0.35,
 		pitchVariation = 0.1,
 	},
 	{
 		material = Enum.Material.Rock,
-		sounds = { "rbxassetid://0", "rbxassetid://0", "rbxassetid://0" },
+		sounds = { "rbxassetid://9064974448", "rbxassetid://833564121", "rbxassetid://9064974448" },
 		volume = 0.6,
 		pitchVariation = 0.08,
 	},
 	{
 		material = Enum.Material.Slate,
-		sounds = { "rbxassetid://0", "rbxassetid://0" },
+		sounds = { "rbxassetid://9064974448", "rbxassetid://833564121" },
 		volume = 0.55,
 		pitchVariation = 0.1,
 	},
 	{
 		material = Enum.Material.Water,
-		sounds = { "rbxassetid://0", "rbxassetid://0", "rbxassetid://0" },
+		sounds = { "rbxassetid://5930519356", "rbxassetid://142431247", "rbxassetid://5930519356" },
 		volume = 0.7,
 		pitchVariation = 0.2,
 	},
@@ -240,10 +247,10 @@ AudioConfig.SoundEffects = {
 		spatial = false,
 	},
 
-	-- Item Sounds
+	-- Item Sounds (using coin/collect sound as pickup)
 	item_pickup = {
 		id = "item_pickup",
-		soundId = "rbxassetid://0",
+		soundId = "rbxassetid://6895079853", -- Collect/pickup sound
 		category = "sfx",
 		volume = 0.5,
 		spatial = true,
@@ -318,7 +325,7 @@ AudioConfig.SoundEffects = {
 	},
 	player_splash = {
 		id = "player_splash",
-		soundId = "rbxassetid://0",
+		soundId = "rbxassetid://5930519356", -- Water splash
 		category = "sfx",
 		volume = 0.7,
 		spatial = true,

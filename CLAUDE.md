@@ -92,10 +92,16 @@ An ecology simulation game. You are an Ecologist discovering what's wrong with i
 | File | Coverage |
 |------|----------|
 | `shared/ItemDefinitions.spec` | Item properties, categories |
+| `shared/AudioConfig.spec` | Sound asset validation |
 | `server/SpeciesData.spec` | Food web, population constraints |
 | `server/NPCDefinitions.spec` | Species linkage, movement stats |
+| `server/StatDrainService.spec` | Drain rates, config API |
+| `server/WaterController.spec` | Water state detection |
+| `server/DialogueService.spec` | Conversation flow |
 
 Run tests: `require(game.ReplicatedStorage.Tests)()`
+
+See [TESTING.md](./TESTING.md) for comprehensive testing guide.
 
 ---
 
@@ -333,7 +339,10 @@ git push -u origin feature/my-feature
 | # | Issue | Status |
 |---|-------|--------|
 | 22 | Camera System | Open |
-| 23 | Day/Night Cycle | Open |
+| 30 | Item Pickup Audio/Visual Feedback | Open |
+| 31 | Dialogue UI Implementation | Open |
+| 32 | Regression Tests | Open |
+| 33 | Flashlight System | Open |
 
 ### Recently Completed
 - #29 Discovery Locations - Real positions for proximity discoveries
@@ -370,6 +379,22 @@ git push -u origin feature/my-feature
 - Type annotations on public APIs
 - Single responsibility modules
 - Test critical systems
+
+### Version Numbers
+- Include version numbers in all components and subsystems
+- Bump versions when making changes
+- Display version in output/logs when component loads
+- Use independent versioning per subcomponent (e.g., `InventoryHotbar v1.2.0`)
+- Format: `local VERSION = "X.Y.Z"` at top of module
+- Log format: `print("[ModuleName v" .. VERSION .. "] Initialized")`
+
+### Testing Requirements
+- **After every bug fix**: Add a regression test that would have caught the bug
+- **Before PR merge**: Run `require(game.ReplicatedStorage.Tests)()` in Studio
+- **Data validation**: All definition modules (Items, NPCs, Audio) must have spec files
+- **Service behavior**: Critical services need module structure and config tests
+- **Sound assets**: No `rbxassetid://0` placeholders in production
+- See [TESTING.md](./TESTING.md) for full testing guide
 
 ### NPC Naming
 - Use nature-themed names (e.g., Dr. Sage, Ranger Maya)

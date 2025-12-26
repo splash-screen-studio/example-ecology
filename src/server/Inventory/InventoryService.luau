@@ -98,6 +98,13 @@ function InventoryService:addItem(player: Player, itemId: string, quantity: numb
 				-- Can only add up to max stack
 				local canAdd = itemDef.maxStack - existing.quantity
 				if canAdd <= 0 then
+					-- Notify client inventory is full
+					if Network then
+						Network.Events.InventoryUpdate:FireClient(player, {
+							items = inventory.items,
+							inventoryFull = true,
+						})
+					end
 					return false -- Stack full
 				end
 				existing.quantity = itemDef.maxStack
@@ -107,6 +114,13 @@ function InventoryService:addItem(player: Player, itemId: string, quantity: numb
 			end
 		else
 			-- Non-stackable, can't add more
+			-- Notify client inventory is full
+			if Network then
+				Network.Events.InventoryUpdate:FireClient(player, {
+					items = inventory.items,
+					inventoryFull = true,
+				})
+			end
 			return false
 		end
 	else
@@ -117,6 +131,13 @@ function InventoryService:addItem(player: Player, itemId: string, quantity: numb
 		end
 
 		if slotCount >= inventory.maxSlots then
+			-- Notify client inventory is full
+			if Network then
+				Network.Events.InventoryUpdate:FireClient(player, {
+					items = inventory.items,
+					inventoryFull = true,
+				})
+			end
 			return false -- Inventory full
 		end
 
@@ -129,7 +150,9 @@ function InventoryService:addItem(player: Player, itemId: string, quantity: numb
 
 	-- Notify client of full inventory update
 	if Network then
-		Network.Events.InventoryUpdate:FireClient(player, inventory.items)
+		Network.Events.InventoryUpdate:FireClient(player, {
+			items = inventory.items,
+		})
 	end
 
 	-- Notify QuestService for collection quests
@@ -163,7 +186,9 @@ function InventoryService:removeItem(player: Player, itemId: string, quantity: n
 
 	-- Notify client of full inventory update
 	if Network then
-		Network.Events.InventoryUpdate:FireClient(player, inventory.items)
+		Network.Events.InventoryUpdate:FireClient(player, {
+			items = inventory.items,
+		})
 	end
 
 	return true

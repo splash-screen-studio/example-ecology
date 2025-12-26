@@ -18,6 +18,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Components
 local StatsBar = require(script.Components.StatsBar)
+local PositionDisplay = require(script.Components.PositionDisplay)
 local InventoryHotbar = require(script.Components.InventoryHotbar)
 local InteractionPrompt = require(script.Components.InteractionPrompt)
 local NotificationToast = require(script.Components.NotificationToast)
@@ -33,6 +34,7 @@ local screenGui: ScreenGui?
 
 -- Widgets
 local statsWidget: StatsBar.StatsBarWidget?
+local positionWidget: PositionDisplay.PositionWidget?
 local hotbarWidget: InventoryHotbar.HotbarWidget?
 local interactionWidget: InteractionPrompt.PromptWidget?
 local toastWidget: NotificationToast.ToastWidget?
@@ -78,25 +80,41 @@ local function setupNetworkListeners()
 	table.insert(connections, statUpdateConn)
 
 	-- Listen for inventory updates from server
-	local inventoryUpdateConn = Network.Events.InventoryUpdate.OnClientEvent:Connect(function(items: { [string]: { quantity: number } })
+	local inventoryUpdateConn = Network.Events.InventoryUpdate.OnClientEvent:Connect(function(data: any)
 		if hotbarWidget then
-			-- Convert server format to hotbar format
-			-- For now, take first 5 items
-			local hotbarItems: { InventoryHotbar.InventoryItem? } = {}
-			local index = 1
-
-			for itemId, itemData in items do
-				if index > 5 then
-					break
-				end
-				hotbarItems[index] = {
-					itemId = itemId,
-					quantity = itemData.quantity,
-				}
-				index = index + 1
+			-- Handle inventory full message
+			if data.inventoryFull then
+				hotbarWidget:showMessage("Inventory full", 3)
 			end
 
-			hotbarWidget:setItems(hotbarItems)
+			-- Handle item use failed feedback
+			if data.useItemFailed then
+				hotbarWidget:showMessage(data.message or "Cannot use this item", 2)
+			end
+
+			-- Handle items update
+			local items = data.items or data
+			if type(items) == "table" and not data.useItemFailed then
+				-- Convert server format to hotbar format
+				-- For now, take first 5 items
+				local hotbarItems: { InventoryHotbar.InventoryItem? } = {}
+				local index = 1
+
+				for itemId, itemData in items do
+					if index > 5 then
+						break
+					end
+					if type(itemData) == "table" and itemData.quantity then
+						hotbarItems[index] = {
+							itemId = itemId,
+							quantity = itemData.quantity,
+						}
+						index = index + 1
+					end
+				end
+
+				hotbarWidget:setItems(hotbarItems)
+			end
 		end
 	end)
 	table.insert(connections, inventoryUpdateConn)
@@ -133,8 +151,14 @@ function HUD:init()
 	screenGui = createScreenGui()
 	screenGui.Parent = playerGui
 
-	-- Create stats bar (top-left)
+	-- Create stats bar (top-right)
 	statsWidget = StatsBar.create(screenGui)
+
+	-- Create position display (under stats bar)
+	-- Stats bar is ~80px tall, add spacing
+	local statsBarHeight = 80
+	local positionYOffset = 16 + statsBarHeight + 8 -- screenPadding + statsBar + gap
+	positionWidget = PositionDisplay.create(screenGui, positionYOffset)
 
 	-- Create inventory hotbar (bottom-center)
 	hotbarWidget = InventoryHotbar.create(screenGui)
@@ -154,6 +178,17 @@ function HUD:init()
 		Network.Events.UseItem:FireServer({
 			itemId = item.itemId,
 		})
+	end
+
+	-- Setup hotbar item discard callback (right-click)
+	hotbarWidget.onDiscardItem = function(item: InventoryHotbar.InventoryItem)
+		loadDependencies()
+		-- Discard 1 item at a time
+		Network.Events.DropItem:FireServer({
+			itemId = item.itemId,
+			quantity = 1,
+		})
+		hotbarWidget:showMessage("Discarded 1 " .. item.itemId, 2)
 	end
 
 	-- Setup network listeners
@@ -211,6 +246,11 @@ function HUD:destroy()
 		statsWidget = nil
 	end
 
+	if positionWidget then
+		positionWidget:destroy()
+		positionWidget = nil
+	end
+
 	if hotbarWidget then
 		hotbarWidget:destroy()
 		hotbarWidget = nil
@@ -255,6 +295,18 @@ function HUD:getSelectedItem(): InventoryHotbar.InventoryItem?
 		return hotbarWidget:getSelectedItem()
 	end
 	return nil
+end
+
+function HUD:showHotbarMessage(message: string, duration: number?)
+	if hotbarWidget then
+		hotbarWidget:showMessage(message, duration)
+	end
+end
+
+function HUD:hideHotbarMessage()
+	if hotbarWidget then
+		hotbarWidget:hideMessage()
+	end
 end
 
 function HUD:show()

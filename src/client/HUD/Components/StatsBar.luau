@@ -137,7 +137,7 @@ function StatsBar.create(parent: GuiObject): StatsBarWidget
 	frame.AnchorPoint = Vector2.new(1, 0)
 	frame.Position = UDim2.new(1, -screenPadding, 0, screenPadding)
 	frame.BackgroundColor3 = Colors.ContainerBackground
-	frame.BackgroundTransparency = Colors.ContainerBackgroundTransparency
+	frame.BackgroundTransparency = HUDConstants.Transparency.Background
 	frame.BorderSizePixel = 0
 	frame.Parent = parent
 
